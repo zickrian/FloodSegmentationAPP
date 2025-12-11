@@ -1,11 +1,39 @@
-# Model files now tracked with Git LFS - don't ignore them
-# Only ignore notebook files and cache
+# Model files - stored in Railway Bucket, not in build
+Models/
+**/*.pth
+**/*.pt
 **/*.ipynb
+
+# Dependencies (installed during build, not needed in source)
 node_modules/
 .venv/
+venv/
+__pycache__/
+
+# Build outputs
 .cache/
 .pytest_cache/
 .turbo/
 dist/
 .next/
+out/
+build/
+
+# Documentation (not needed in build)
+*.md
+!README.md
+
+# Development files
+*.ps1
+setup.sh
+Procfile
+railway.toml
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Logs
+*.log
 
