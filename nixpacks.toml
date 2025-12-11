@@ -11,8 +11,10 @@ aptPkgs = ["libgl1", "libglx-mesa0", "libglib2.0-0"]
 [phases.install]
 # Install Python & Node dependencies
 cmds = [
-    "python -m pip install --upgrade pip",
-    "python -m pip install --no-cache-dir -r backend/requirements.txt",
+    # Create isolated virtualenv to avoid Nix-managed system restrictions
+    "python -m venv /app/.venv",
+    "/app/.venv/bin/pip install --upgrade pip",
+    "/app/.venv/bin/pip install --no-cache-dir -r backend/requirements.txt",
     "npm ci"
 ]
 
@@ -32,3 +34,4 @@ PYTHONUNBUFFERED = "1"
 OPENCV_HEADLESS = "1"
 # Ensure Next.js connects to local backend internally
 NEXT_PUBLIC_API_URL = "/api"
+
