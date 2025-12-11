@@ -3,12 +3,22 @@ Models/
 **/*.pth
 **/*.pt
 **/*.ipynb
+**/*.onnx
+**/*.h5
+**/*.hdf5
+**/*.pkl
 
 # Dependencies (installed during build, not needed in source)
 node_modules/
 .venv/
 venv/
+env/
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
 
 # Build outputs
 .cache/
@@ -18,23 +28,59 @@ dist/
 .next/
 out/
 build/
+coverage/
 
 # Documentation (not needed in build)
-*.md
-README.md
-backend/README.md
+# Explicitly exclude specific documentation files instead of using negation patterns
+ARCHITECTURE.md
+DEPLOYMENT.md
+TESTING.md
+RAILWAY_*.md
+GIT_*.md
+docs/
 
 # Development files
 *.ps1
 setup.sh
 Procfile
-railway.toml
 
-# Git
+# Git and version control
 .git/
 .gitignore
 .gitattributes
+.github/
 
-# Logs
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
 *.log
+*.tmp
+*.temp
+
+# Test files
+tests/
+**/*_test.py
+**/*test*.py
+pytest.ini
+.coverage
+
+# Environment files (example files can be kept if needed)
+.env.local
+.env.development
+.env.test
+.env.production.local
+
+# Misc
+.eslintcache
+.prettierignore
+.editorconfig
 
