@@ -21,7 +21,8 @@ build/
 
 # Documentation (not needed in build)
 *.md
-!README.md
+README.md
+backend/README.md
 
 # Development files
 *.ps1
