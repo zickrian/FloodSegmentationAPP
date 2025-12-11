@@ -1,21 +1,24 @@
 # Nixpacks configuration for Railway
-# This project requires both Python (for FastAPI backend) and Node.js (for Next.js frontend)
+# Backend-only deployment (Python FastAPI)
 
-# Use only python provider to avoid npm/npx conflict with nodejs nixPkg
+# Use Python provider
 providers = ["python"]
 
 [phases.setup]
-# Explicitly specify Node.js and Python packages (no duplicate from providers)
-nixPkgs = ["nodejs_20", "python311", "python311Packages.pip"]
+# OpenCV dependencies
+aptPkgs = ["libgl1-mesa-glx", "libglib2.0-0"]
 
 [phases.install]
 cmds = [
-    "npm ci",
-    "pip install -r backend/requirements.txt"
+    "pip install --break-system-packages --upgrade pip",
+    "pip install --break-system-packages -r backend/requirements.txt"
 ]
 
 [phases.build]
-cmds = ["npm run build"]
+cmds = ["echo 'Build complete'"]
 
 [start]
-cmd = "cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+cmd = "cd backend && python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
+
+[variables]
+PYTHONUNBUFFERED = "1"
