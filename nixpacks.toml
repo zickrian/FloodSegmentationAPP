@@ -5,7 +5,8 @@
 # Install BOTH Node.js and Python
 # Note: Removed 'libgl1' and 'glib' from nixPkgs as they are handled by aptPkgs below to avoid Nix errors
 nixPkgs = ["nodejs_20", "python311", "gcc", "ffmpeg"]
-aptPkgs = ["libgl1-mesa-glx", "libglib2.0-0"]
+# libgl1-mesa-glx is deprecated in newer Ubuntu versions, use libgl1 and libglx-mesa0 instead
+aptPkgs = ["libgl1", "libglx-mesa0", "libglib2.0-0"]
 
 [phases.install]
 # Install Python & Node dependencies
