@@ -1,11 +1,12 @@
-[build]
-builder = "nixpacks"
+﻿[build]
+buildCommand = "npm ci && npm run build && pip install -r backend/requirements.txt"
 
 [deploy]
-startCommand = "cd backend && /app/venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+startCommand = "cd backend && python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT"
 numReplicas = 1
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
 
 [env]
 PYTHONUNBUFFERED = "1"
+NEXT_PUBLIC_API_URL = "$RAILWAY_DEPLOYMENT_URL/api"
