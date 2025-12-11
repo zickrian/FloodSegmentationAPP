@@ -40,9 +40,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Model files - Now tracked with Git LFS (see .gitattributes)
-# Git LFS will handle large files, so we don't ignore them here
-# Only ignore temporary/cache model directories
+# Model files - Stored in Railway Bucket, not in repo
+# Models will be downloaded from Railway Bucket at runtime
+Models/*.pth
+Models/*.pt
 backend/models_weights/
 models_weights/
 *.pth.bak
