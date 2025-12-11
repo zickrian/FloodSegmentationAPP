@@ -9,15 +9,15 @@ aptPkgs = ["libgl1", "libglib2.0-0"]
 cmds = [
     "npm ci",
     "npm run build",
-    "pip install --upgrade pip",
-    "pip install -r backend/requirements.txt"
+    "pip3 install --upgrade pip",
+    "pip3 install -r backend/requirements.txt"
 ]
 
 [phases.build]
 cmds = ["echo 'Build complete'"]
 
 [start]
-cmd = "cd backend && python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
+cmd = "cd backend && python3 -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
 
 [variables]
 PYTHONUNBUFFERED = "1"
