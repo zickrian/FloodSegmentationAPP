@@ -36,7 +36,7 @@ else
     RAILWAY_BUCKET_NAME="${RAILWAY_BUCKET_NAME:-neat-gyoza-bevw8k9fvmbjyz}"
     
     # Method 1: Direct URLs (if provided) - Recommended
-    elif [ -n "$MODEL_URL_UNET" ] && [ -n "$MODEL_URL_UNETPP" ] && command -v curl >/dev/null 2>&1; then
+    if [ -n "$MODEL_URL_UNET" ] && [ -n "$MODEL_URL_UNETPP" ] && command -v curl >/dev/null 2>&1; then
         echo "Downloading models from Railway Bucket URLs..."
         
         if [ ! -f "$MODEL_UNET" ]; then
