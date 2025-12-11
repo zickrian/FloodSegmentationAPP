@@ -15,6 +15,12 @@ fi
 
 echo "App directory: $APP_DIR"
 
+# Prefer virtualenv Python if present to avoid Nix system immutability
+PYTHON_BIN="$APP_DIR/.venv/bin/python"
+if [ ! -x "$PYTHON_BIN" ]; then
+    PYTHON_BIN="$(command -v python)"
+fi
+
 # Start Backend in background
 echo ""
 echo "Starting FastAPI Backend on port 8000..."
@@ -25,7 +31,7 @@ if [ ! -f "app/main.py" ]; then
     exit 1
 fi
 
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+"$PYTHON_BIN" -m uvicorn app.main:app --host 0.0.0.0 --port 8000 &
 BACKEND_PID=$!
 echo "Backend started with PID: $BACKEND_PID"
 

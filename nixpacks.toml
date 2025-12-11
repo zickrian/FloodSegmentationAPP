@@ -10,8 +10,10 @@ aptPkgs = ["libgl1", "libglx-mesa0", "libglib2.0-0"]
 [phases.install]
 # Install Python & Node dependencies
 cmds = [
-    "pip install --upgrade pip setuptools wheel",
-    "pip install --no-cache-dir -r backend/requirements.txt",
+    # Use a dedicated virtualenv to avoid immutable Nix system python
+    "python -m venv /app/.venv",
+    "/app/.venv/bin/pip install --upgrade pip setuptools wheel",
+    "/app/.venv/bin/pip install --no-cache-dir -r backend/requirements.txt",
     "npm ci"
 ]
 
