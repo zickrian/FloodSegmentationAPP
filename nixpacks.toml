@@ -14,7 +14,9 @@ cmds = [
     "python -m venv /app/.venv",
     "/app/.venv/bin/pip install --upgrade pip setuptools wheel",
     "/app/.venv/bin/pip install --no-cache-dir -r backend/requirements.txt",
-    "npm ci"
+    "npm ci",
+    # Install Railway CLI globally for bucket access
+    "npm install -g @railway/cli"
 ]
 
 [phases.build]

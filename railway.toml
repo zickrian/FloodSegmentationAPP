@@ -14,3 +14,12 @@ PYTHONPATH = "/app"
 OPENCV_HEADLESS = "1"
 # API URL handled by Next.js rewrites - empty means use internal rewrite
 NEXT_PUBLIC_API_URL = ""
+# Railway Bucket Configuration
+# Set these in Railway Dashboard or override here
+RAILWAY_BUCKET_NAME = "neat-gyoza-bevw8k9fvmbjyz"
+# Optional: If using direct URLs instead of Railway CLI
+# MODEL_URL_UNET = ""
+# MODEL_URL_UNETPP = ""
+# Optional: If using AWS CLI/S3 API
+# RAILWAY_ACCESS_KEY_ID = ""
+# RAILWAY_SECRET_ACCESS_KEY = ""
