@@ -6,9 +6,9 @@ fastapi==0.109.0
 uvicorn[standard]==0.27.0
 python-multipart==0.0.6
 
-# Machine Learning
-torch>=2.6.0
-torchvision>=0.21.0
+# Machine Learning (CPU-only for Railway - lightweight)
+torch==2.1.0 --index-url https://download.pytorch.org/whl/cpu
+torchvision==0.16.0 --index-url https://download.pytorch.org/whl/cpu
 segmentation-models-pytorch==0.3.3
 timm==0.9.2
 
