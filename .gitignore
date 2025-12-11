@@ -40,13 +40,13 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Model files (Too large for GitHub - will be uploaded to Railway Storage)
-*.pth
-*.pt
-Models/*.pth
-Models/*.pt
-backend/Models/
-models/
+# Model files - Now tracked with Git LFS (see .gitattributes)
+# Git LFS will handle large files, so we don't ignore them here
+# Only ignore temporary/cache model directories
+backend/models_weights/
+models_weights/
+*.pth.bak
+*.pt.bak
 
 # Python cache
 __pycache__/

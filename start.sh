@@ -5,22 +5,6 @@ echo "============================================="
 echo "Starting Flood Segmentation App on Railway"
 echo "============================================="
 
-# Download model weights from remote URLs if provided to keep image small
-MODEL_DIR="$APP_DIR/backend/models_weights"
-mkdir -p "$MODEL_DIR"
-if command -v curl >/dev/null 2>&1; then
-  if [ -n "$MODEL_URL_UNET" ]; then
-    echo "Downloading UNet model..."
-    curl -fsSL "$MODEL_URL_UNET" -o "$MODEL_DIR/unet_baseline_best.pth"
-  fi
-  if [ -n "$MODEL_URL_UNETPP" ]; then
-    echo "Downloading UNet++ model..."
-    curl -fsSL "$MODEL_URL_UNETPP" -o "$MODEL_DIR/unetplus.pth"
-  fi
-else
-  echo "Warning: curl not found; skipping remote model download."
-fi
-
 # Check if we're in the right directory
 if [ ! -d "/app" ]; then
     echo "Warning: /app directory not found, using current directory"
@@ -30,6 +14,18 @@ else
 fi
 
 echo "App directory: $APP_DIR"
+
+# Verify model files exist (from Git LFS)
+echo ""
+echo "Checking model files..."
+if [ -f "$APP_DIR/Models/unet_baseline_best.pth" ] && [ -f "$APP_DIR/Models/unetplus.pth" ]; then
+    echo "✅ Model files found in Models/ folder"
+else
+    echo "⚠️  Warning: Model files not found in Models/ folder"
+    echo "   Make sure Git LFS is properly configured and files are pulled"
+    echo "   Expected: $APP_DIR/Models/unet_baseline_best.pth"
+    echo "   Expected: $APP_DIR/Models/unetplus.pth"
+fi
 
 # Prefer virtualenv Python if present to avoid Nix system immutability
 PYTHON_BIN="$APP_DIR/.venv/bin/python"

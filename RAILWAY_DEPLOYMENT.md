@@ -28,27 +28,49 @@ NEXT_PUBLIC_API_URL=
 PORT=3000
 ```
 
-**Optional Model Paths** (if models are in Railway Storage):
+**Optional Model Paths** (only if you want to override default):
 ```
+# Default: Models/unet_baseline_best.pth and Models/unetplus.pth
+# Only set these if models are in a different location
 MODEL_PATH_UNET=/path/to/unet_baseline_best.pth
 MODEL_PATH_UNETPP=/path/to/unetplus.pth
 ```
 
 ### 3. Model Files Setup
 
-Since model files (`.pth`) are large and excluded from git:
+Model files are now tracked using **Git LFS** (Git Large File Storage).
 
-**Option A: Railway Storage**
-1. Upload model files to Railway Storage
-2. Set environment variables to point to storage paths
+**Setup Git LFS (One-time):**
+1. Install Git LFS on your local machine:
+   ```bash
+   # Windows (with Chocolatey)
+   choco install git-lfs
+   
+   # macOS
+   brew install git-lfs
+   
+   # Linux
+   sudo apt-get install git-lfs
+   ```
 
-**Option B: Direct Upload**
-1. Use Railway CLI to upload models
-2. Place files in the `Models/` directory in deployment
+2. Initialize Git LFS:
+   ```bash
+   git lfs install
+   ```
 
-**Option C: External Storage**
-1. Host models on S3/GCS/etc.
-2. Download them during startup
+3. Add model files to Git LFS:
+   ```bash
+   git add Models/*.pth
+   git commit -m "Add model files with Git LFS"
+   git push origin main
+   ```
+
+**Railway Deployment:**
+- Railway will automatically pull Git LFS files during deployment
+- Model files will be available in `Models/` folder at root
+- No additional configuration needed - the app reads from `Models/` folder automatically
+
+**Note:** If models are not pulled automatically, Railway will clone the repo with LFS files included. The `.gitattributes` file ensures `.pth` files are tracked by LFS.
 
 ### 4. Verify Configuration Files
 

@@ -64,13 +64,16 @@ async def startup_event():
         model_path_unetpp = os.getenv("MODEL_PATH_UNETPP")
         
         # Fallback to local paths (for local development)
-        if not model_path_unet:
+        # Read from Models folder at project root
+        if not model_path_unet or not model_path_unetpp:
+            # Get absolute path to Models folder (2 levels up from backend/app/)
             base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "Models"))
-            model_path_unet = os.path.join(base_path, "unet_baseline_best.pth")
-        
-        if not model_path_unetpp:
-            base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "Models"))
-            model_path_unetpp = os.path.join(base_path, "unetplus.pth")
+            
+            if not model_path_unet:
+                model_path_unet = os.path.join(base_path, "unet_baseline_best.pth")
+            
+            if not model_path_unetpp:
+                model_path_unetpp = os.path.join(base_path, "unetplus.pth")
         
         logger.info(f"UNet model path: {model_path_unet}")
         logger.info(f"UNet++ model path: {model_path_unetpp}")

@@ -1,7 +1,5 @@
-Models/**
-**/*.pth
-**/*.pt
-**/*.onnx
+# Model files now tracked with Git LFS - don't ignore them
+# Only ignore notebook files and cache
 **/*.ipynb
 node_modules/
 .venv/
@@ -10,3 +8,4 @@ node_modules/
 .turbo/
 dist/
 .next/
+
