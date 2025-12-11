@@ -42,7 +42,8 @@ next-env.d.ts
 
 # Model files - Stored in Railway Bucket, not in repo
 # Models will be downloaded from Railway Bucket at runtime
-Models/
+Models/*
+!Models/.gitkeep
 **/*.pth
 **/*.pt
 backend/models_weights/
