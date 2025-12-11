@@ -47,4 +47,4 @@ echo "Backend is running!"
 # Start Frontend in foreground
 echo ""
 echo "Starting Next.js Frontend on port ${PORT:-3000}..."
-npm start -- -p ${PORT:-3000}
+PORT=${PORT:-3000} npm start

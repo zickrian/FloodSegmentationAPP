@@ -28,5 +28,5 @@ cmd = "chmod +x start.sh && ./start.sh"
 [variables]
 PYTHONUNBUFFERED = "1"
 OPENCV_HEADLESS = "1"
-# Ensure Next.js connects to local backend internally
-NEXT_PUBLIC_API_URL = "/api"
+# Empty - Next.js rewrites handle internal routing
+NEXT_PUBLIC_API_URL = ""
