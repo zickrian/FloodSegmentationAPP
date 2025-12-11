@@ -20,8 +20,9 @@ cmds = [
     "npm ci",
     # Install Railway CLI globally for bucket access
     "npm install -g @railway/cli",
-    # Clean up pip cache and temporary files
+    # Aggressive cleanup after pip install
     "rm -rf /root/.cache/pip",
+    "rm -rf /tmp/*",
     "find /app/.venv -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true",
     "find /app/.venv -type f -name '*.pyc' -delete 2>/dev/null || true",
     "find /app/.venv -type f -name '*.pyo' -delete 2>/dev/null || true"
@@ -41,7 +42,9 @@ cmds = [
     "find node_modules -type f -name '*.md' -o -name 'LICENSE*' -o -name 'CHANGELOG*' | xargs rm -f 2>/dev/null || true",
     # Remove Python test files and docs from venv
     "find /app/.venv -type d -name 'tests' -o -name 'test' | xargs rm -rf 2>/dev/null || true",
-    "find /app/.venv -type f -name '*.md' -o -name 'LICENSE*' -o -name 'CHANGELOG*' | xargs rm -f 2>/dev/null || true"
+    "find /app/.venv -type f -name '*.md' -o -name 'LICENSE*' -o -name 'CHANGELOG*' | xargs rm -f 2>/dev/null || true",
+    # Remove static libraries (*.a files) - not needed at runtime, can save 100s of MB
+    "find /app/.venv -type f -name '*.a' -delete 2>/dev/null || true"
 ]
 
 [start]
