@@ -10,7 +10,7 @@ FastAPI backend for flood area segmentation using UNet and UNet++ deep learning 
 - **Automatic Preprocessing:** Matches training pipeline exactly
 - **Comprehensive Analysis:** Flood metrics, overlays, and summaries
 - **REST API:** Simple POST endpoint for segmentation
-- **Production Ready:** Docker support, health checks, logging
+- **Production Ready:** Health checks, logging, Railway deployment support
 
 ## Prerequisites
 
@@ -41,16 +41,6 @@ cp ../Models/unetplus.pth models_weights/
 
 # Run server
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-### Docker
-
-```bash
-# Build image
-docker build -t flood-segmentation-backend .
-
-# Run container
-docker run -p 8000:8000 flood-segmentation-backend
 ```
 
 ## API Endpoints
@@ -127,7 +117,6 @@ backend/
 │   ├── unet_baseline_best.pth
 │   └── unetplus.pth
 ├── requirements.txt
-├── Dockerfile
 └── README.md
 ```
 
@@ -154,20 +143,20 @@ python test_api.py
 
 ## Deployment
 
-### Railway
+### Railway (Recommended)
 
-1. Create new project on Railway
-2. Connect your GitHub repository
-3. Add environment variables
-4. Deploy automatically
+This backend is part of a monorepo deployment on Railway:
+- See [RAILWAY_DEPLOYMENT.md](../RAILWAY_DEPLOYMENT.md) for complete guide
+- Backend and frontend run together in same container
+- Uses Nixpacks for automatic build configuration
 
 ### Other Platforms
 
-Compatible with:
-- Heroku
-- Google Cloud Run
-- AWS ECS
-- Azure Container Instances
+For standalone deployment:
+1. Ensure Python 3.10+ is available
+2. Install dependencies from `requirements.txt`
+3. Set environment variables for model paths
+4. Run with `uvicorn app.main:app --host 0.0.0.0 --port 8000`
 
 ## Performance
 

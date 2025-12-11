@@ -15,7 +15,7 @@ Advanced flood area detection using deep learning (UNet & UNet++) with a modern 
 - **Comprehensive Metrics:** Flood area percentage, pixel counts, and model agreement
 - **Visual Overlays:** Color-coded segmentation masks
 - **Disagreement Analysis:** See where models differ
-- **Production Ready:** Deployed to Railway with Docker support
+- **Production Ready:** Deployed to Railway with Nixpacks (no Docker required)
 
 ## 📸 Screenshots
 
@@ -141,14 +141,17 @@ flood-segmentation/
 │   │   ├── postprocessing.py# Analysis generation
 │   │   └── utils.py         # Helpers
 │   ├── models_weights/      # Model checkpoints
-│   ├── requirements.txt     # Python dependencies
-│   └── Dockerfile          # Docker configuration
+│   └── requirements.txt     # Python dependencies
 ├── Models/                  # Training artifacts
 │   ├── eksperimen_PCD_unet_dan_unet++.ipynb
 │   ├── unet_baseline_best.pth
 │   └── unetplus.pth
+├── nixpacks.toml            # Railway build config
+├── railway.toml             # Railway deployment config
+├── start.sh                 # Startup script
+├── Procfile                 # Alternative deployment
 ├── ARCHITECTURE.md          # System architecture
-├── DEPLOYMENT.md            # Deployment guide
+├── RAILWAY_DEPLOYMENT.md    # Railway deployment guide
 ├── TESTING.md               # Testing procedures
 └── README.md               # This file
 ```
@@ -180,33 +183,30 @@ See [TESTING.md](TESTING.md) for comprehensive testing guide.
 
 ### Railway (Recommended)
 
-1. **Backend:**
+This application is designed for Railway deployment using Nixpacks (no Docker required).
+
+1. **Connect Repository:**
    - Create new project on Railway
    - Connect GitHub repository
-   - Set root directory to `backend/`
-   - Add environment variables (see [DEPLOYMENT.md](DEPLOYMENT.md))
-   - Deploy
+   - Railway will auto-detect `nixpacks.toml` configuration
 
-2. **Frontend:**
-   - Create new service in same project
-   - Connect same repository
-   - Set `NEXT_PUBLIC_API_URL` to backend URL
-   - Deploy
+2. **Configure Environment Variables:**
+   - Set `PYTHONUNBUFFERED=1`
+   - Set `OPENCV_HEADLESS=1`
+   - Set `NEXT_PUBLIC_API_URL=` (empty for internal routing)
+   - Add model paths if using Railway Storage
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
+3. **Deploy:**
+   - Railway will automatically build and deploy
+   - Both frontend and backend run in same container
 
-### Docker
+See [RAILWAY_DEPLOYMENT.md](RAILWAY_DEPLOYMENT.md) for complete deployment guide.
 
-```bash
-# Backend
-cd backend
-docker build -t flood-backend .
-docker run -p 8000:8000 flood-backend
+### Alternative: Manual Deployment
 
-# Frontend
-docker build -t flood-frontend .
-docker run -p 3000:3000 flood-frontend
-```
+For other platforms, you can use the included scripts:
+- `start.sh` - Starts both backend and frontend
+- `Procfile` - Alternative deployment configuration
 
 ## 📊 Model Performance
 
