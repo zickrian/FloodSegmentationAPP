@@ -1,6 +1,18 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Disable source maps in production to save space
+  productionBrowserSourceMaps: false,
+  
+  // Optimize images
+  images: {
+    unoptimized: false,
+    formats: ['image/webp'],
+  },
+  
+  // Enable compression
+  compress: true,
+  
   // Rewrite requests to the local running FastAPI backend
   async rewrites() {
     return [
