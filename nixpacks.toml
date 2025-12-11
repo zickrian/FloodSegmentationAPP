@@ -5,8 +5,8 @@
 providers = ["python"]
 
 [phases.setup]
-# OpenCV dependencies
-aptPkgs = ["libgl1-mesa-glx", "libglib2.0-0"]
+# OpenCV headless dependencies (Ubuntu Noble compatible)
+aptPkgs = ["libgl1", "libglib2.0-0"]
 
 [phases.install]
 cmds = [
