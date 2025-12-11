@@ -1,0 +1,12 @@
+Models/**
+**/*.pth
+**/*.pt
+**/*.onnx
+**/*.ipynb
+node_modules/
+.venv/
+.cache/
+.pytest_cache/
+.turbo/
+dist/
+.next/
