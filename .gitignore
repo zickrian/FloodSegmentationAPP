@@ -69,3 +69,6 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+
+# Temporary upload scripts
+upload_models.py

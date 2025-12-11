@@ -35,29 +35,7 @@ else
     # Railway Bucket Configuration (from environment or defaults)
     RAILWAY_BUCKET_NAME="${RAILWAY_BUCKET_NAME:-neat-gyoza-bevw8k9fvmbjyz}"
     
-    # Method 1: Railway CLI (Preferred)
-    if command -v railway >/dev/null 2>&1; then
-        echo "Using Railway CLI to download from bucket: $RAILWAY_BUCKET_NAME"
-        
-        if [ ! -f "$MODEL_UNET" ]; then
-            echo "Downloading UNet model..."
-            railway bucket download "$RAILWAY_BUCKET_NAME" unet_baseline_best.pth -o "$MODEL_UNET" || {
-                echo "❌ Failed to download UNet model via Railway CLI"
-                exit 1
-            }
-            echo "✅ UNet model downloaded ($(du -h "$MODEL_UNET" 2>/dev/null | cut -f1 || echo 'N/A'))"
-        fi
-        
-        if [ ! -f "$MODEL_UNETPP" ]; then
-            echo "Downloading UNet++ model..."
-            railway bucket download "$RAILWAY_BUCKET_NAME" unetplus.pth -o "$MODEL_UNETPP" || {
-                echo "❌ Failed to download UNet++ model via Railway CLI"
-                exit 1
-            }
-            echo "✅ UNet++ model downloaded ($(du -h "$MODEL_UNETPP" 2>/dev/null | cut -f1 || echo 'N/A'))"
-        fi
-    
-    # Method 2: Direct URLs (if provided)
+    # Method 1: Direct URLs (if provided) - Recommended
     elif [ -n "$MODEL_URL_UNET" ] && [ -n "$MODEL_URL_UNETPP" ] && command -v curl >/dev/null 2>&1; then
         echo "Downloading models from Railway Bucket URLs..."
         
@@ -79,7 +57,7 @@ else
             echo "✅ UNet++ model downloaded ($(du -h "$MODEL_UNETPP" 2>/dev/null | cut -f1 || echo 'N/A'))"
         fi
     
-    # Method 3: AWS CLI / S3 API (if credentials provided)
+    # Method 2: AWS CLI / S3 API (if credentials provided)
     elif [ -n "$RAILWAY_ACCESS_KEY_ID" ] && [ -n "$RAILWAY_SECRET_ACCESS_KEY" ] && command -v aws >/dev/null 2>&1; then
         echo "Using AWS CLI to download from Railway Bucket..."
         export AWS_ACCESS_KEY_ID="$RAILWAY_ACCESS_KEY_ID"
@@ -87,22 +65,29 @@ else
         export AWS_ENDPOINT_URL="https://storage.railway.app"
         
         if [ ! -f "$MODEL_UNET" ]; then
-            aws s3 cp "s3://$RAILWAY_BUCKET_NAME/unet_baseline_best.pth" "$MODEL_UNET" --endpoint-url="$AWS_ENDPOINT_URL" || exit 1
-            echo "✅ UNet model downloaded"
+            echo "Downloading UNet model via AWS CLI..."
+            aws s3 cp "s3://$RAILWAY_BUCKET_NAME/unet_baseline_best.pth" "$MODEL_UNET" --endpoint-url="$AWS_ENDPOINT_URL" || {
+                echo "❌ Failed to download UNet model via AWS CLI"
+                exit 1
+            }
+            echo "✅ UNet model downloaded ($(du -h "$MODEL_UNET" 2>/dev/null | cut -f1 || echo 'N/A'))"
         fi
         
         if [ ! -f "$MODEL_UNETPP" ]; then
-            aws s3 cp "s3://$RAILWAY_BUCKET_NAME/unetplus.pth" "$MODEL_UNETPP" --endpoint-url="$AWS_ENDPOINT_URL" || exit 1
-            echo "✅ UNet++ model downloaded"
+            echo "Downloading UNet++ model via AWS CLI..."
+            aws s3 cp "s3://$RAILWAY_BUCKET_NAME/unetplus.pth" "$MODEL_UNETPP" --endpoint-url="$AWS_ENDPOINT_URL" || {
+                echo "❌ Failed to download UNet++ model via AWS CLI"
+                exit 1
+            }
+            echo "✅ UNet++ model downloaded ($(du -h "$MODEL_UNETPP" 2>/dev/null | cut -f1 || echo 'N/A'))"
         fi
     
     else
         echo "❌ ERROR: Model files not found and no download method available!"
         echo ""
         echo "   Available methods:"
-        echo "   1. Railway CLI: Install with 'npm i -g @railway/cli' and set RAILWAY_BUCKET_NAME"
-        echo "   2. Direct URLs: Set MODEL_URL_UNET and MODEL_URL_UNETPP environment variables"
-        echo "   3. AWS CLI: Set RAILWAY_ACCESS_KEY_ID and RAILWAY_SECRET_ACCESS_KEY"
+        echo "   1. Direct URLs: Set MODEL_URL_UNET and MODEL_URL_UNETPP environment variables (Recommended)"
+        echo "   2. AWS CLI: Set RAILWAY_ACCESS_KEY_ID, RAILWAY_SECRET_ACCESS_KEY, and RAILWAY_BUCKET_NAME"
         echo ""
         echo "   Expected files:"
         echo "   - $MODEL_UNET"
