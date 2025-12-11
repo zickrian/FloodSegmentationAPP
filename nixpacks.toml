@@ -2,11 +2,13 @@
 # Backend-only deployment (Python FastAPI)
 
 [phases.setup]
-nixPkgs = ["python311", "gcc"]
+nixPkgs = ["nodejs_20", "python311", "gcc"]
 aptPkgs = ["libgl1", "libglib2.0-0"]
 
 [phases.install]
 cmds = [
+    "npm ci",
+    "npm run build",
     "python3.11 -m venv /app/venv",
     "/app/venv/bin/pip install --upgrade pip",
     "/app/venv/bin/pip install -r backend/requirements.txt"
