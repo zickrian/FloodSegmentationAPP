@@ -12,14 +12,12 @@ torchvision>=0.21.0
 segmentation-models-pytorch==0.3.3
 timm>=1.0.0
 
-# Image Processing
+# Image Processing & Augmentation (MUST MATCH TRAINING)
 Pillow==10.2.0
 opencv-python-headless==4.9.0.80
+albumentations==1.4.0
 numpy==1.26.3
 
 # Utilities
 python-dotenv==1.0.0
-
-# Albumentation for compatibility
-albumentations==1.4.0
 

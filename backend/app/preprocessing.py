@@ -1,32 +1,35 @@
 """
 Image Preprocessing Module
-CRITICAL: Must match training preprocessing exactly
+CRITICAL: Uses Albumentations to match training preprocessing exactly
 """
 
 import torch
 from torch import Tensor
-from torchvision import transforms
 from PIL import Image
 import numpy as np
 from typing import Tuple
+import cv2
 
-# ImageNet normalization statistics (used in training)
+import albumentations as A
+from albumentations.pytorch import ToTensorV2
+
+# ImageNet normalization statistics (ResNet34 pretrained - MUST MATCH TRAINING)
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
 IMAGENET_STD = [0.229, 0.224, 0.225]
 
-# Target image size (must match training)
+# Target image size (MUST MATCH TRAINING: 256x256)
 IMG_SIZE = 256
 
 
 def preprocess_image(image: Image.Image, device: torch.device) -> Tensor:
     """
-    Preprocess image for model inference (matches training pipeline exactly)
+    Preprocess image for model inference using Albumentations (EXACT MATCH WITH TRAINING)
     
-    Standard preprocessing pipeline:
-    1. Convert to RGB (training images are RGB)
-    2. Resize to 256x256 (training image size)
-    3. Convert to tensor [0, 1] range
-    4. Normalize with ImageNet statistics (ResNet34 pretrained)
+    Uses EXACT SAME pipeline as training validation/test:
+    1. Convert PIL to numpy array (RGB)
+    2. Resize to 256x256 with BILINEAR interpolation
+    3. Normalize with ImageNet statistics
+    4. Convert to tensor via Albumentations ToTensorV2
     5. Add batch dimension for model input
     
     Args:
@@ -36,19 +39,26 @@ def preprocess_image(image: Image.Image, device: torch.device) -> Tensor:
     Returns:
         Preprocessed image tensor [1, 3, 256, 256] on specified device
     """
-    # Step 1: Ensure RGB color space (training used RGB)
+    # Step 1: Ensure RGB color space and convert PIL to numpy array
     if image.mode != 'RGB':
         image = image.convert('RGB')
     
-    # Step 2-4: Standard transforms (MUST MATCH TRAINING)
-    transform = transforms.Compose([
-        transforms.Resize((IMG_SIZE, IMG_SIZE), interpolation=Image.BILINEAR),  # 256x256 BILINEAR
-        transforms.ToTensor(),  # [0, 1] range, CHW format
-        transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD)  # ImageNet norm
+    # Convert PIL Image to numpy array (RGB format, HWC)
+    image_np = np.array(image)
+    
+    # Step 2-4: Albumentations transforms (EXACT MATCH WITH TRAINING VAL/TEST)
+    # This is the EXACT SAME transform used in training for validation/test
+    val_transform = A.Compose([
+        A.Resize(IMG_SIZE, IMG_SIZE),  # 256x256 resize
+        A.Normalize(
+            mean=IMAGENET_MEAN,
+            std=IMAGENET_STD,
+        ),
+        ToTensorV2(),  # Convert to tensor [C, H, W]
     ])
     
-    # Apply transforms: [3, 256, 256]
-    tensor = transform(image)
+    # Apply transforms: output is [3, 256, 256] tensor
+    tensor = val_transform(image=image_np)['image']
     
     # Step 5: Add batch dimension [1, 3, 256, 256]
     tensor = tensor.unsqueeze(0)
