@@ -1,0 +1,175 @@
+"""
+Model Management Module
+Handles loading and inference for UNet and UNet++ models
+"""
+
+import torch
+import torch.nn as nn
+import segmentation_models_pytorch as smp
+import logging
+from typing import Tuple
+import numpy as np
+
+logger = logging.getLogger(__name__)
+
+
+class ModelManager:
+    """
+    Manages UNet and UNet++ models for flood segmentation
+    Loads models once and handles inference
+    """
+    
+    def __init__(self, unet_path: str, unetpp_path: str):
+        """
+        Initialize and load both models
+        
+        Args:
+            unet_path: Path to UNet model weights (.pth)
+            unetpp_path: Path to UNet++ model weights (.pth)
+        """
+        # Determine device (GPU if available, else CPU)
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        logger.info(f"Using device: {self.device}")
+        
+        # Model configuration (must match training)
+        self.encoder_name = 'resnet34'
+        self.in_channels = 3
+        self.classes = 1
+        
+        # Load UNet
+        logger.info("Loading UNet model...")
+        self.model_unet = self._create_unet()
+        self._load_weights(self.model_unet, unet_path, "UNet")
+        self.model_unet.to(self.device)
+        self.model_unet.eval()
+        logger.info("✓ UNet model loaded and ready")
+        
+        # Load UNet++
+        logger.info("Loading UNet++ model...")
+        self.model_unetpp = self._create_unetplusplus()
+        self._load_weights(self.model_unetpp, unetpp_path, "UNet++")
+        self.model_unetpp.to(self.device)
+        self.model_unetpp.eval()
+        logger.info("✓ UNet++ model loaded and ready")
+    
+    def _create_unet(self) -> nn.Module:
+        """Create UNet model architecture"""
+        model = smp.Unet(
+            encoder_name=self.encoder_name,
+            encoder_weights=None,  # We'll load trained weights
+            in_channels=self.in_channels,
+            classes=self.classes,
+            activation=None  # We apply sigmoid separately
+        )
+        return model
+    
+    def _create_unetplusplus(self) -> nn.Module:
+        """Create UNet++ model architecture"""
+        model = smp.UnetPlusPlus(
+            encoder_name=self.encoder_name,
+            encoder_weights=None,  # We'll load trained weights
+            in_channels=self.in_channels,
+            classes=self.classes,
+            activation=None  # We apply sigmoid separately
+        )
+        return model
+    
+    def _load_weights(self, model: nn.Module, weight_path: str, model_name: str):
+        """
+        Load model weights from checkpoint
+        
+        Args:
+            model: PyTorch model
+            weight_path: Path to .pth file
+            model_name: Name for logging
+        """
+        try:
+            # Load weights
+            state_dict = torch.load(
+                weight_path,
+                map_location=self.device,
+                weights_only=True  # Security best practice
+            )
+            
+            # Load state dict into model
+            model.load_state_dict(state_dict)
+            
+            logger.info(f"✓ {model_name} weights loaded from {weight_path}")
+            
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                f"{model_name} weights not found at {weight_path}"
+            )
+        except Exception as e:
+            raise RuntimeError(
+                f"Failed to load {model_name} weights: {str(e)}"
+            )
+    
+    @torch.no_grad()
+    def predict_unet(self, image_tensor: torch.Tensor) -> np.ndarray:
+        """
+        Run UNet inference
+        
+        Args:
+            image_tensor: Preprocessed image tensor [1, 3, 256, 256]
+            
+        Returns:
+            Binary mask as numpy array [256, 256]
+        """
+        # Forward pass
+        logits = self.model_unet(image_tensor)  # [1, 1, 256, 256]
+        
+        # Apply sigmoid to get probabilities
+        probs = torch.sigmoid(logits)  # [1, 1, 256, 256]
+        
+        # Apply threshold (0.5) to get binary mask
+        mask = (probs > 0.5).float()  # [1, 1, 256, 256]
+        
+        # Convert to numpy and remove batch & channel dimensions
+        mask_np = mask.cpu().numpy().squeeze()  # [256, 256]
+        
+        return mask_np
+    
+    @torch.no_grad()
+    def predict_unetpp(self, image_tensor: torch.Tensor) -> np.ndarray:
+        """
+        Run UNet++ inference
+        
+        Args:
+            image_tensor: Preprocessed image tensor [1, 3, 256, 256]
+            
+        Returns:
+            Binary mask as numpy array [256, 256]
+        """
+        # Forward pass
+        logits = self.model_unetpp(image_tensor)  # [1, 1, 256, 256]
+        
+        # Apply sigmoid to get probabilities
+        probs = torch.sigmoid(logits)  # [1, 1, 256, 256]
+        
+        # Apply threshold (0.5) to get binary mask
+        mask = (probs > 0.5).float()  # [1, 1, 256, 256]
+        
+        # Convert to numpy and remove batch & channel dimensions
+        mask_np = mask.cpu().numpy().squeeze()  # [256, 256]
+        
+        return mask_np
+    
+    def get_model_info(self) -> dict:
+        """Get information about loaded models"""
+        return {
+            "device": str(self.device),
+            "encoder": self.encoder_name,
+            "input_size": "256x256",
+            "models": {
+                "unet": {
+                    "loaded": self.model_unet is not None,
+                    "parameters": sum(p.numel() for p in self.model_unet.parameters())
+                },
+                "unetpp": {
+                    "loaded": self.model_unetpp is not None,
+                    "parameters": sum(p.numel() for p in self.model_unetpp.parameters())
+                }
+            }
+        }
+
