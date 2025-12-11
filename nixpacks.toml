@@ -1,0 +1,18 @@
+# Nixpacks configuration for Railway
+# This project requires both Python (for FastAPI backend) and Node.js (for Next.js frontend)
+
+[phases.setup]
+nixPkgs = ["python311", "python311Packages.pip"]
+
+[phases.install]
+cmds = [
+    "npm ci",
+    "pip install -r backend/requirements.txt"
+]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+
