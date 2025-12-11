@@ -23,9 +23,10 @@ cmds = [
     # Aggressive cleanup after pip install
     "rm -rf /root/.cache/pip",
     "rm -rf /tmp/*",
-    "find /app/.venv -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true",
+    # Remove Python bytecode files - use -delete for more reliable cleanup
     "find /app/.venv -type f -name '*.pyc' -delete 2>/dev/null || true",
-    "find /app/.venv -type f -name '*.pyo' -delete 2>/dev/null || true"
+    "find /app/.venv -type f -name '*.pyo' -delete 2>/dev/null || true",
+    "find /app/.venv -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true"
 ]
 
 [phases.build]
@@ -37,12 +38,12 @@ cmds = [
     "rm -rf .next/cache/webpack",
     # Remove dev dependencies after build (keep only production dependencies)
     "npm prune --production",
-    # Remove test files and docs from node_modules
-    "find node_modules -type d -name 'test' -o -name 'tests' -o -name '__tests__' | xargs rm -rf 2>/dev/null || true",
-    "find node_modules -type f -name '*.md' -o -name 'LICENSE*' -o -name 'CHANGELOG*' | xargs rm -f 2>/dev/null || true",
-    # Remove Python test files and docs from venv
-    "find /app/.venv -type d -name 'tests' -o -name 'test' | xargs rm -rf 2>/dev/null || true",
-    "find /app/.venv -type f -name '*.md' -o -name 'LICENSE*' -o -name 'CHANGELOG*' | xargs rm -f 2>/dev/null || true",
+    # Remove test files and docs from node_modules - use -exec for reliability
+    "find node_modules -type d \\( -name 'test' -o -name 'tests' -o -name '__tests__' \\) -exec rm -rf {} + 2>/dev/null || true",
+    "find node_modules -type f \\( -name '*.md' -o -name 'LICENSE*' -o -name 'CHANGELOG*' \\) -exec rm -f {} + 2>/dev/null || true",
+    # Remove Python test files and docs from venv - use -exec for reliability
+    "find /app/.venv -type d \\( -name 'tests' -o -name 'test' \\) -exec rm -rf {} + 2>/dev/null || true",
+    "find /app/.venv -type f \\( -name '*.md' -o -name 'LICENSE*' -o -name 'CHANGELOG*' \\) -exec rm -f {} + 2>/dev/null || true",
     # Remove static libraries (*.a files) - not needed at runtime, can save 100s of MB
     "find /app/.venv -type f -name '*.a' -delete 2>/dev/null || true"
 ]

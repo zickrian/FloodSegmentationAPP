@@ -4,9 +4,8 @@ const nextConfig: NextConfig = {
   // Disable source maps in production to save space
   productionBrowserSourceMaps: false,
   
-  // Optimize images
+  // Optimize images with WebP format
   images: {
-    unoptimized: false,
     formats: ['image/webp'],
   },
   

@@ -31,8 +31,12 @@ build/
 coverage/
 
 # Documentation (not needed in build)
-*.md
-!README.md
+# Explicitly exclude specific documentation files instead of using negation patterns
+ARCHITECTURE.md
+DEPLOYMENT.md
+TESTING.md
+RAILWAY_*.md
+GIT_*.md
 docs/
 
 # Development files
