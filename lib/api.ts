@@ -4,8 +4,9 @@
 
 import { SegmentationResult } from './types';
 
-// Get API URL from environment variable or use default
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// Get API URL from environment variable or use default relative path
+// In production (Railway), this will use the Next.js rewrite rule to /api
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 /**
  * Upload image and get segmentation results

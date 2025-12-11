@@ -1,23 +1,32 @@
 # Nixpacks configuration for Railway
-# Backend-only deployment (Python FastAPI)
+# Hybrid Deployment: Next.js + FastAPI
 
 [phases.setup]
-nixPkgs = ["nodejs_20", "python311", "gcc"]
-aptPkgs = ["libgl1", "libglib2.0-0"]
+# Install BOTH Node.js and Python + System Libs
+nixPkgs = ["nodejs_20", "python311", "gcc", "ffmpeg", "libgl1", "glib"]
+aptPkgs = ["libgl1-mesa-glx", "libglib2.0-0"]
 
 [phases.install]
+# Install Python & Node dependencies
 cmds = [
-    "npm ci",
-    "npm run build",
-    "pip3 install --upgrade pip",
-    "pip3 install -r backend/requirements.txt"
+    "python -m pip install --upgrade pip",
+    "python -m pip install --no-cache-dir -r backend/requirements.txt",
+    "npm ci"
 ]
 
 [phases.build]
-cmds = ["echo 'Build complete'"]
+# Build Next.js application
+cmds = [
+    "npm run build"
+]
 
 [start]
-cmd = "cd backend && python3 -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
+# Run both using the start script
+cmd = "chmod +x start.sh && ./start.sh"
 
 [variables]
+NIXPACKS_PYTHON_VERSION = "3.11"
 PYTHONUNBUFFERED = "1"
+OPENCV_HEADLESS = "1"
+# Ensure Next.js connects to local backend internally
+NEXT_PUBLIC_API_URL = "/api"

@@ -1,10 +1,15 @@
+[build]
+builder = "nixpacks"
+
 [deploy]
-startCommand = "python3 -m uvicorn app.main:app --host 0.0.0.0 --port $PORT"
-workingDirectory = "backend"
+# Using start.sh to run both services
+startCommand = "chmod +x start.sh && ./start.sh"
 numReplicas = 1
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
 
 [env]
 PYTHONUNBUFFERED = "1"
-NEXT_PUBLIC_API_URL = "$RAILWAY_DEPLOYMENT_URL/api"
+PYTHONPATH = "/app"
+# API URL handled by Next.js rewrites
+NEXT_PUBLIC_API_URL = ""
