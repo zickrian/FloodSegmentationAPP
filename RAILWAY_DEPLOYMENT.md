@@ -36,41 +36,75 @@ MODEL_PATH_UNET=/path/to/unet_baseline_best.pth
 MODEL_PATH_UNETPP=/path/to/unetplus.pth
 ```
 
-### 3. Model Files Setup
+### 3. Model Files Setup (4.3 GB - Railway Buckets Strategy)
 
-Model files are now tracked using **Git LFS** (Git Large File Storage).
+**⚠️ IMPORTANT: Model files (4.3 GB) are too large for Railway build limit (4 GB max)**
 
-**Setup Git LFS (One-time):**
-1. Install Git LFS on your local machine:
+We use **Railway Buckets** (Object Storage) to store models and download them at runtime.
+
+#### Step 1: Upload Models to Railway Bucket
+
+1. **Create Railway Bucket:**
+   - Go to Railway Dashboard → Your Project
+   - Click "New" → "Database" → "Bucket" (or use Railway CLI)
+   - Name it: `flood-segmentation-models`
+
+2. **Upload Model Files:**
    ```bash
-   # Windows (with Chocolatey)
-   choco install git-lfs
+   # Using Railway CLI
+   railway login
+   railway link
+   railway bucket upload flood-segmentation-models Models/unet_baseline_best.pth
+   railway bucket upload flood-segmentation-models Models/unetplus.pth
    
-   # macOS
-   brew install git-lfs
-   
-   # Linux
-   sudo apt-get install git-lfs
+   # Or via Railway Dashboard:
+   # - Go to Bucket → Upload files
+   # - Upload both .pth files
    ```
 
-2. Initialize Git LFS:
-   ```bash
-   git lfs install
-   ```
+3. **Get Public URLs:**
+   - After upload, Railway provides public URLs for each file
+   - Copy these URLs (you'll need them for environment variables)
 
-3. Add model files to Git LFS:
-   ```bash
-   git add Models/*.pth
-   git commit -m "Add model files with Git LFS"
-   git push origin main
-   ```
+#### Step 2: Configure Environment Variables
 
-**Railway Deployment:**
-- Railway will automatically pull Git LFS files during deployment
-- Model files will be available in `Models/` folder at root
-- No additional configuration needed - the app reads from `Models/` folder automatically
+In Railway Dashboard, add these environment variables:
 
-**Note:** If models are not pulled automatically, Railway will clone the repo with LFS files included. The `.gitattributes` file ensures `.pth` files are tracked by LFS.
+```
+# Railway Bucket URLs (get from Railway Dashboard after upload)
+MODEL_URL_UNET=https://your-bucket-url.railway.app/unet_baseline_best.pth
+MODEL_URL_UNETPP=https://your-bucket-url.railway.app/unetplus.pth
+
+# Optional: If using Railway Bucket name directly
+RAILWAY_BUCKET_NAME=flood-segmentation-models
+```
+
+#### Step 3: How It Works
+
+1. **Build Phase:**
+   - `.dockerignore` excludes `Models/` folder from build
+   - Build image stays under 4 GB limit ✅
+
+2. **Runtime Phase:**
+   - `start.sh` downloads models from Railway Bucket on startup
+   - Models are cached in `Models/` folder
+   - App reads models from local `Models/` folder
+
+#### Alternative: Git LFS (For Smaller Models)
+
+If your models are < 1 GB, you can use Git LFS:
+
+```bash
+# Install Git LFS
+git lfs install
+
+# Track model files
+git add Models/*.pth
+git commit -m "Add model files with Git LFS"
+git push origin main
+```
+
+**Note:** For 4.3 GB models, Railway Buckets is the recommended approach.
 
 ### 4. Verify Configuration Files
 
@@ -78,11 +112,12 @@ Make sure these files are present and correct:
 
 - ✅ `nixpacks.toml` - Defines build configuration
 - ✅ `railway.toml` - Railway-specific settings
-- ✅ `start.sh` - Startup script (runs both backend and frontend)
+- ✅ `start.sh` - Startup script (downloads models and runs both services)
+- ✅ `.dockerignore` - Excludes Models/ folder from build (CRITICAL for 4.3 GB models)
 - ✅ `Procfile` - Alternative deployment method
 - ✅ `package.json` - Frontend dependencies
 - ✅ `backend/requirements.txt` - Backend dependencies
-- ❌ NO Docker files (`.dockerignore`, `Dockerfile`, etc.)
+- ❌ NO Dockerfile (using Nixpacks, but .dockerignore is respected)
 
 ### 5. Deploy
 
@@ -133,7 +168,16 @@ Railway Deployment
 ### "Backend failed to start" Error
 - Check Railway logs for backend errors
 - Verify model paths are correct
+- **Check if models downloaded successfully** - look for "✅ Model files verified" in logs
+- Verify `MODEL_URL_UNET` and `MODEL_URL_UNETPP` environment variables are set
+- Ensure Railway Bucket URLs are accessible
 - Ensure all dependencies installed
+
+### "Model files not found" Error
+- Verify Railway Bucket URLs in environment variables
+- Check Railway Bucket is accessible and files are uploaded
+- Check `start.sh` logs for download errors
+- Verify `.dockerignore` excludes Models/ (models should NOT be in build)
 
 ### "Cannot connect to API" Error
 - Verify backend is running on port 8000
@@ -150,8 +194,12 @@ Railway Deployment
 1. **No Docker**: This deployment uses Nixpacks (Railway's native builder), not Docker
 2. **CPU-only PyTorch**: Uses lightweight CPU version for faster builds
 3. **Dual Process**: Both frontend and backend run in same container
-4. **Model Size**: Model files must be accessible at runtime
+4. **Model Size (4.3 GB)**: 
+   - Models are stored in Railway Buckets (NOT in build image)
+   - Downloaded at runtime via `start.sh`
+   - `.dockerignore` ensures models don't enter build (stays under 4 GB limit)
 5. **Environment Variables**: All config via Railway dashboard
+6. **Build Limit**: Railway has 4 GB build limit - models must be external
 
 ## Testing Locally
 

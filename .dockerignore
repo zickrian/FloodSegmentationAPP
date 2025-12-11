@@ -1,0 +1,64 @@
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# Python
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Node
+node_modules/
+.npm
+.yarn/
+.pnp
+.pnp.js
+.next/
+out/
+.turbo/
+dist/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env*
+*.log
+
+# Testing
+coverage/
+.pytest_cache/
+.coverage
+
+# PENTING: Abaikan folder model yang besar (4.3 GB)
+# Model akan di-download dari Railway Buckets saat runtime
+Models/
+**/*.pth
+**/*.pt
+**/*.onnx
+**/*.h5
+**/*.hdf5
+**/*.pkl
+
+# Notebook files
+**/*.ipynb
+
+# Cache
+.cache/
+.turbo/
