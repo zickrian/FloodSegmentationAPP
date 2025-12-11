@@ -108,52 +108,46 @@ class ModelManager:
     @torch.no_grad()
     def predict_unet(self, image_tensor: torch.Tensor) -> np.ndarray:
         """
-        Run UNet inference
+        Run UNet inference and generate binary mask
         
         Args:
             image_tensor: Preprocessed image tensor [1, 3, 256, 256]
             
         Returns:
-            Binary mask as numpy array [256, 256]
+            Binary flood mask [256, 256] with values 0 or 1 (uint8)
         """
-        # Forward pass
-        logits = self.model_unet(image_tensor)  # [1, 1, 256, 256]
+        # Model forward pass: raw logits [1, 1, 256, 256]
+        logits = self.model_unet(image_tensor)
         
-        # Apply sigmoid to get probabilities
-        probs = torch.sigmoid(logits)  # [1, 1, 256, 256]
+        # Sigmoid activation: convert logits to probabilities [0, 1]
+        probs = torch.sigmoid(logits)
         
-        # Apply threshold (0.5) to get binary mask
-        mask = (probs > 0.5).float()  # [1, 1, 256, 256]
+        # Binary threshold at 0.5: standard threshold for flood segmentation
+        mask = (probs > 0.5).float().squeeze().cpu().numpy()
         
-        # Convert to numpy and remove batch & channel dimensions
-        mask_np = mask.cpu().numpy().squeeze()  # [256, 256]
-        
-        return mask_np
+        return mask.astype(np.uint8)
     
     @torch.no_grad()
     def predict_unetpp(self, image_tensor: torch.Tensor) -> np.ndarray:
         """
-        Run UNet++ inference
+        Run UNet++ inference and generate binary mask
         
         Args:
             image_tensor: Preprocessed image tensor [1, 3, 256, 256]
             
         Returns:
-            Binary mask as numpy array [256, 256]
+            Binary flood mask [256, 256] with values 0 or 1 (uint8)
         """
-        # Forward pass
-        logits = self.model_unetpp(image_tensor)  # [1, 1, 256, 256]
+        # Model forward pass: raw logits [1, 1, 256, 256]
+        logits = self.model_unetpp(image_tensor)
         
-        # Apply sigmoid to get probabilities
-        probs = torch.sigmoid(logits)  # [1, 1, 256, 256]
+        # Sigmoid activation: convert logits to probabilities [0, 1]
+        probs = torch.sigmoid(logits)
         
-        # Apply threshold (0.5) to get binary mask
-        mask = (probs > 0.5).float()  # [1, 1, 256, 256]
+        # Binary threshold at 0.5: standard threshold for flood segmentation
+        mask = (probs > 0.5).float().squeeze().cpu().numpy()
         
-        # Convert to numpy and remove batch & channel dimensions
-        mask_np = mask.cpu().numpy().squeeze()  # [256, 256]
-        
-        return mask_np
+        return mask.astype(np.uint8)
     
     def get_model_info(self) -> dict:
         """Get information about loaded models"""

@@ -15,16 +15,25 @@ logger = logging.getLogger(__name__)
 
 def calculate_flood_metrics(mask: np.ndarray) -> Dict[str, Any]:
     """
-    Calculate flood area metrics from binary mask
+    Calculate flood area metrics from binary mask (256x256)
+    
+    Standard calculation:
+    - Total pixels: 256 × 256 = 65,536
+    - Flood pixels: count of pixels with value = 1
+    - Flood percentage: (flood_pixels / 65,536) × 100
     
     Args:
-        mask: Binary mask [H, W] with values 0 or 1
+        mask: Binary mask [256, 256] with values 0 or 1
         
     Returns:
         Dictionary with flood metrics
     """
-    total_pixels = mask.size
-    flood_pixels = int(np.sum(mask))
+    # Validate mask dimensions
+    if mask.shape != (256, 256):
+        raise ValueError(f"Mask must be 256x256, got {mask.shape}")
+    
+    total_pixels = 256 * 256  # Always 65,536
+    flood_pixels = int(np.sum(mask > 0))  # Count flood pixels (value = 1)
     flood_percent = (flood_pixels / total_pixels) * 100
     
     return {
@@ -36,19 +45,27 @@ def calculate_flood_metrics(mask: np.ndarray) -> Dict[str, Any]:
 
 def calculate_disagreement(mask1: np.ndarray, mask2: np.ndarray) -> Dict[str, Any]:
     """
-    Calculate disagreement between two binary masks using XOR
+    Calculate disagreement between two binary masks (256x256)
+    
+    Uses XOR operation to find pixels where models disagree:
+    - Disagreement = pixels where mask1 ≠ mask2
+    - Agreement = pixels where mask1 = mask2
     
     Args:
-        mask1: First binary mask [H, W]
-        mask2: Second binary mask [H, W]
+        mask1: First binary mask [256, 256]
+        mask2: Second binary mask [256, 256]
         
     Returns:
         Dictionary with disagreement metrics and mask
     """
-    # XOR operation to find pixels where models disagree
+    # Validate mask dimensions
+    if mask1.shape != (256, 256) or mask2.shape != (256, 256):
+        raise ValueError(f"Masks must be 256x256, got {mask1.shape} and {mask2.shape}")
+    
+    # XOR operation: find pixels where masks differ
     disagreement_mask = np.logical_xor(mask1, mask2).astype(np.uint8)
     
-    total_pixels = mask1.size
+    total_pixels = 256 * 256  # Always 65,536
     disagreement_pixels = int(np.sum(disagreement_mask))
     disagreement_percent = (disagreement_pixels / total_pixels) * 100
     agreement_percent = 100 - disagreement_percent
@@ -203,26 +220,32 @@ def generate_analysis_results(
     """
     Generate complete analysis results including metrics, overlays, and summaries
     
+    Standard output format:
+    - Masks: 256x256 binary (values 0 or 1)
+    - Metrics: flood_percent, flood_pixels, total_pixels (65,536)
+    - Overlays: resized to 256x256 with color-coded flood areas
+    - Summary: text descriptions of results
+    
     Args:
-        original_image: Original uploaded PIL Image
+        original_image: Original uploaded PIL Image (any size)
         mask_unet: UNet binary mask [256, 256]
         mask_unetpp: UNet++ binary mask [256, 256]
         
     Returns:
-        Complete results dictionary
+        Complete results dictionary with standardized format
     """
     logger.info("Calculating flood metrics...")
     
-    # Calculate metrics for each model
+    # Calculate metrics for each model (standard 256x256 masks)
     unet_metrics = calculate_flood_metrics(mask_unet)
     unetpp_metrics = calculate_flood_metrics(mask_unetpp)
     
-    logger.info(f"UNet: {unet_metrics['flood_percent']}% flooded")
-    logger.info(f"UNet++: {unetpp_metrics['flood_percent']}% flooded")
+    logger.info(f"UNet: {unet_metrics['flood_percent']}% flooded ({unet_metrics['flood_pixels']} pixels)")
+    logger.info(f"UNet++: {unetpp_metrics['flood_percent']}% flooded ({unetpp_metrics['flood_pixels']} pixels)")
     
-    # Calculate disagreement
+    # Calculate disagreement between models
     disagreement_data = calculate_disagreement(mask_unet, mask_unetpp)
-    logger.info(f"Disagreement: {disagreement_data['disagreement_percent']}%")
+    logger.info(f"Agreement: {disagreement_data['agreement_percent']}% (Disagreement: {disagreement_data['disagreement_percent']}%)")
     
     # Generate summary texts
     summaries = generate_summary_text(
@@ -231,38 +254,37 @@ def generate_analysis_results(
         disagreement_data
     )
     
-    logger.info("Creating overlay images...")
+    logger.info("Creating overlay images (256x256)...")
     
-    # Create overlays (resize image to 256x256 to match masks)
+    # Resize original image to 256x256 to match mask dimensions
     image_resized = original_image.resize((256, 256), Image.BILINEAR)
     
-    # Red overlay for UNet
+    # Create color-coded overlays with standard flood visualization
+    # Red for UNet, Blue for UNet++, Purple for disagreement
     overlay_unet = create_overlay(
         image_resized,
         mask_unet,
-        color=(255, 0, 0),  # Red
+        color=(255, 0, 0),  # Red for flood
         alpha=0.4
     )
     
-    # Blue overlay for UNet++
     overlay_unetpp = create_overlay(
         image_resized,
         mask_unetpp,
-        color=(0, 100, 255),  # Blue
+        color=(0, 100, 255),  # Blue for flood
         alpha=0.4
     )
     
-    # Purple overlay for disagreement
     overlay_disagreement = create_overlay(
         image_resized,
         disagreement_data['disagreement_mask'],
-        color=(150, 0, 255),  # Purple
+        color=(150, 0, 255),  # Purple for disagreement areas
         alpha=0.5
     )
     
     logger.info("Converting images to base64...")
     
-    # Convert all images to base64
+    # Convert all images to base64 for frontend display
     images = {
         "original": image_to_base64(image_resized),
         "unet_overlay": image_to_base64(overlay_unet),
@@ -270,7 +292,7 @@ def generate_analysis_results(
         "disagreement": image_to_base64(overlay_disagreement)
     }
     
-    # Compile final results
+    # Compile final standardized results
     results = {
         "unet": {
             **unet_metrics,

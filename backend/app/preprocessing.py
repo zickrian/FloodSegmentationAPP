@@ -20,40 +20,40 @@ IMG_SIZE = 256
 
 def preprocess_image(image: Image.Image, device: torch.device) -> Tensor:
     """
-    Preprocess image for model inference
+    Preprocess image for model inference (matches training pipeline exactly)
     
-    CRITICAL: This preprocessing MUST match the training pipeline:
-    1. Convert to RGB
-    2. Resize to 256x256
-    3. Normalize with ImageNet statistics
-    4. Convert to tensor
-    5. Add batch dimension
+    Standard preprocessing pipeline:
+    1. Convert to RGB (training images are RGB)
+    2. Resize to 256x256 (training image size)
+    3. Convert to tensor [0, 1] range
+    4. Normalize with ImageNet statistics (ResNet34 pretrained)
+    5. Add batch dimension for model input
     
     Args:
         image: PIL Image object (any size, any format)
         device: PyTorch device (cuda or cpu)
         
     Returns:
-        Preprocessed image tensor [1, 3, 256, 256]
+        Preprocessed image tensor [1, 3, 256, 256] on specified device
     """
-    # Ensure image is in RGB mode
+    # Step 1: Ensure RGB color space (training used RGB)
     if image.mode != 'RGB':
         image = image.convert('RGB')
     
-    # Define preprocessing transforms (matches training)
+    # Step 2-4: Standard transforms (MUST MATCH TRAINING)
     transform = transforms.Compose([
-        transforms.Resize((IMG_SIZE, IMG_SIZE), interpolation=Image.BILINEAR),
-        transforms.ToTensor(),  # Converts to [0, 1] and CHW format
-        transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD)
+        transforms.Resize((IMG_SIZE, IMG_SIZE), interpolation=Image.BILINEAR),  # 256x256 BILINEAR
+        transforms.ToTensor(),  # [0, 1] range, CHW format
+        transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD)  # ImageNet norm
     ])
     
-    # Apply transforms
-    tensor = transform(image)  # [3, 256, 256]
+    # Apply transforms: [3, 256, 256]
+    tensor = transform(image)
     
-    # Add batch dimension
-    tensor = tensor.unsqueeze(0)  # [1, 3, 256, 256]
+    # Step 5: Add batch dimension [1, 3, 256, 256]
+    tensor = tensor.unsqueeze(0)
     
-    # Move to device
+    # Move to device (GPU/CPU)
     tensor = tensor.to(device)
     
     return tensor

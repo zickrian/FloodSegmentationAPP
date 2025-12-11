@@ -56,13 +56,15 @@ async def startup_event():
     
     try:
         # Get model paths from environment variables or use defaults
+        # Models are located in the Models directory at root level
+        base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "Models"))
         model_path_unet = os.getenv(
             "MODEL_PATH_UNET", 
-            "./models_weights/unet_baseline_best.pth"
+            os.path.join(base_path, "unet_baseline_best.pth")
         )
         model_path_unetpp = os.getenv(
             "MODEL_PATH_UNETPP", 
-            "./models_weights/unetplus.pth"
+            os.path.join(base_path, "unetplus.pth")
         )
         
         logger.info(f"UNet model path: {model_path_unet}")

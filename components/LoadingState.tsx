@@ -1,64 +1,78 @@
 'use client';
 
 import React from 'react';
-import { Loader2, Brain, Cpu } from 'lucide-react';
+
+const BrainIcon = ({ className = "w-8 h-8" }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 4.5a2.5 2.5 0 0 0-4.96-.46 2.5 2.5 0 0 0-1.98 3 2.5 2.5 0 0 0-1.32 4.24 3 3 0 0 0 .34 5.58 2.5 2.5 0 0 0 2.96 3.08 2.5 2.5 0 0 0 4.91.05L12 20V4.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M12 4.5a2.5 2.5 0 0 1 4.96-.46 2.5 2.5 0 0 1 1.98 3 2.5 2.5 0 0 1 1.32 4.24 3 3 0 0 1-.34 5.58 2.5 2.5 0 0 1-2.96 3.08A2.5 2.5 0 0 1 12 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const CpuIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" strokeWidth="2" />
+    <rect x="9" y="9" width="6" height="6" stroke="currentColor" strokeWidth="2" />
+    <line x1="9" y1="1" x2="9" y2="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <line x1="15" y1="1" x2="15" y2="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
 
 interface LoadingStateProps {
   message?: string;
 }
 
+const steps = [
+  'Preprocessing image',
+  'Running UNet inference',
+  'Running UNet++ inference',
+  'Generating analysis',
+];
+
 export default function LoadingState({ message = 'Processing image...' }: LoadingStateProps) {
   return (
-    <div className="w-full bg-white rounded-lg shadow-md p-8 border border-gray-200">
+    <div className="card p-6 sm:p-8">
       <div className="flex flex-col items-center justify-center space-y-6">
-        {/* Animated Icon */}
+        {/* Animated Spinner */}
         <div className="relative">
-          <div className="absolute inset-0 animate-ping">
-            <div className="w-16 h-16 rounded-full bg-blue-400 opacity-20"></div>
-          </div>
-          <div className="relative p-4 bg-blue-100 rounded-full">
-            <Brain className="w-8 h-8 text-blue-600 animate-pulse" />
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-gray-100 border-t-blue-600 animate-spin" style={{ animationDuration: '1s' }} />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <BrainIcon className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />
           </div>
         </div>
 
-        {/* Loading Text */}
-        <div className="text-center space-y-2">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center justify-center gap-2">
-            <Loader2 className="w-5 h-5 animate-spin" />
+        {/* Text */}
+        <div className="text-center">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center justify-center gap-2">
+            <span className="spinner" />
             {message}
           </h3>
-          <p className="text-sm text-gray-600">
-            Running UNet and UNet++ models on your image
+          <p className="text-sm text-gray-500 mt-1">
+            Running <span className="font-medium text-red-500">UNet</span> and{' '}
+            <span className="font-medium text-blue-600">UNet++</span> models
           </p>
         </div>
 
-        {/* Progress Steps */}
-        <div className="w-full max-w-md space-y-3">
-          <LoadingStep label="Preprocessing image" delay={0} />
-          <LoadingStep label="Running UNet inference" delay={200} />
-          <LoadingStep label="Running UNet++ inference" delay={400} />
-          <LoadingStep label="Generating analysis" delay={600} />
+        {/* Steps */}
+        <div className="w-full max-w-xs space-y-2">
+          {steps.map((step, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+              style={{ animation: 'pulse 2s ease-in-out infinite', animationDelay: `${index * 0.2}s` }}
+            >
+              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <span className="text-sm text-gray-600">{step}</span>
+            </div>
+          ))}
         </div>
 
-        {/* Estimated Time */}
-        <div className="text-xs text-gray-500 flex items-center gap-1">
-          <Cpu className="w-4 h-4" />
-          <span>Estimated time: 1-3 seconds</span>
+        {/* Timer */}
+        <div className="flex items-center gap-2 text-xs text-gray-400">
+          <CpuIcon className="w-4 h-4" />
+          <span>Estimated: 1-3 seconds</span>
         </div>
       </div>
     </div>
   );
 }
-
-function LoadingStep({ label, delay }: { label: string; delay: number }) {
-  return (
-    <div
-      className="flex items-center gap-3 text-sm text-gray-600 animate-pulse"
-      style={{ animationDelay: `${delay}ms` }}
-    >
-      <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-      <span>{label}</span>
-    </div>
-  );
-}
-
