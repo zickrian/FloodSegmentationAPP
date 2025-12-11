@@ -21,7 +21,7 @@ A modern, full-stack web application for flood area segmentation using deep lear
 - Pillow, NumPy, OpenCV
 
 **Deployment:**
-- Railway (Frontend + Backend as separate services)
+- Railway (Frontend + Backend in same container using Nixpacks)
 
 ---
 
@@ -164,9 +164,7 @@ segmentasiapp/
 │   ├── models_weights/               # Model checkpoints
 │   │   ├── unet_baseline_best.pth
 │   │   └── unetplus.pth
-│   ├── requirements.txt              # Python dependencies
-│   ├── Dockerfile                    # Docker config
-│   └── railway.toml                  # Railway config
+│   └── requirements.txt              # Python dependencies
 │
 ├── app/                              # Next.js Frontend (App Router)
 │   ├── page.tsx                      # Main upload page
@@ -195,6 +193,10 @@ segmentasiapp/
 │   ├── unet_baseline_best.pth
 │   └── unetplus.pth
 │
+├── nixpacks.toml                     # Railway build config
+├── railway.toml                      # Railway deployment config
+├── start.sh                          # Startup script
+├── Procfile                          # Alternative deployment
 ├── package.json                      # Node dependencies
 ├── tsconfig.json                     # TypeScript config
 ├── tailwind.config.ts                # Tailwind config
@@ -368,25 +370,27 @@ overlay[mask > 0] = overlay[mask > 0] * 0.6 + np.array([255, 0, 0]) * 0.4
 
 ### Railway Deployment (Recommended)
 
-**Service 1: Backend (FastAPI)**
-- Python 3.10+ runtime
-- Install dependencies from requirements.txt
-- Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+**Unified Service: Frontend + Backend**
+- Uses Nixpacks for automatic build detection
+- Python 3.11 + Node.js 20 runtime
+- Build configuration in `nixpacks.toml`
+- Deployment configuration in `railway.toml`
+- Start script: `start.sh` (runs both services)
 - Environment variables:
-  - `MODEL_PATH_UNET=/app/models_weights/unet_baseline_best.pth`
-  - `MODEL_PATH_UNETPP=/app/models_weights/unetplus.pth`
-  - `DEVICE=cpu` (or cuda if GPU available)
+  - `PYTHONUNBUFFERED=1`
+  - `OPENCV_HEADLESS=1`
+  - `NEXT_PUBLIC_API_URL=` (empty for internal routing)
+  - `MODEL_PATH_UNET=<path>` (optional, for Railway Storage)
+  - `MODEL_PATH_UNETPP=<path>` (optional, for Railway Storage)
 
-**Service 2: Frontend (Next.js)**
-- Node.js 18+ runtime
-- Build command: `npm run build`
-- Start command: `npm start`
-- Environment variables:
-  - `NEXT_PUBLIC_API_URL=<backend-service-url>`
+**Deployment Process:**
+1. Connect GitHub repository to Railway
+2. Railway auto-detects `nixpacks.toml`
+3. Builds Python and Node.js dependencies
+4. Runs `start.sh` to launch both services
+5. Frontend proxies `/api/*` to backend
 
-### Alternative: Docker Deployment
-
-Both services can be containerized and deployed together or separately.
+See [RAILWAY_DEPLOYMENT.md](RAILWAY_DEPLOYMENT.md) for detailed guide.
 
 ---
 

@@ -11,5 +11,6 @@ restartPolicyMaxRetries = 3
 [env]
 PYTHONUNBUFFERED = "1"
 PYTHONPATH = "/app"
-# API URL handled by Next.js rewrites
+OPENCV_HEADLESS = "1"
+# API URL handled by Next.js rewrites - empty means use internal rewrite
 NEXT_PUBLIC_API_URL = ""
