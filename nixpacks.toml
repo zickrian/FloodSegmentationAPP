@@ -6,7 +6,8 @@
 # Adding mesa and libGL for OpenCV headless support (even though headless shouldn't need it)
 nixPkgs = ["python311", "python311Packages.pip", "gcc", "curl", "awscli2", "mesa"]
 # Required system libraries for OpenCV and other dependencies
-aptPkgs = ["libgl1", "libglx-mesa0", "libglib2.0-0", "libgl1-mesa-glx", "libgl1-mesa-dri"]
+# Note: libgl1-mesa-glx and libgl1-mesa-dri are deprecated in Ubuntu 24.04, removed
+aptPkgs = ["libgl1", "libglx-mesa0", "libglib2.0-0"]
 
 [phases.install]
 # Install Python dependencies only
