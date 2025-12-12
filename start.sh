@@ -234,11 +234,20 @@ fi
 
 echo "✅ All model files verified"
 
-# Prefer virtualenv Python if present to avoid Nix system immutability
+# Use virtualenv Python (packages are installed here)
+# Fix vdso_gettimeofday error by setting proper environment variables
 PYTHON_BIN="$APP_DIR/.venv/bin/python"
 if [ ! -x "$PYTHON_BIN" ]; then
-    PYTHON_BIN="$(command -v python)"
+    PYTHON_BIN="$(command -v python3 || command -v python)"
 fi
+
+# Verify Python binary exists and is executable
+if [ ! -x "$PYTHON_BIN" ]; then
+    echo "❌ ERROR: Python binary not found"
+    exit 1
+fi
+
+echo "Using Python: $PYTHON_BIN ($($PYTHON_BIN --version 2>&1 || echo 'version unknown'))"
 
 # Start Backend
 echo ""
@@ -257,8 +266,8 @@ PORT=${PORT:-8000}
 export OPENCV_HEADLESS=1
 export QT_QPA_PLATFORM=offscreen
 
-# Set LD_LIBRARY_PATH to find OpenGL libraries (for Nix environment)
-# This is critical for opencv-python-headless to work even though it shouldn't need libGL
+# Set LD_LIBRARY_PATH and other environment variables for Nix environment
+# This is critical for opencv-python-headless to work and avoid vdso errors
 if [ -d "/nix/store" ]; then
     # Initialize LD_LIBRARY_PATH if not set
     LD_LIBRARY_PATH="${LD_LIBRARY_PATH:-}"
@@ -272,18 +281,41 @@ if [ -d "/nix/store" ]; then
     fi
     
     # Find mesa library directories and add their lib paths (first 3 found)
-    MESA_COUNT=0
     for MESA_PATH in $(find /nix/store -type d -name "mesa-*" 2>/dev/null | head -3); do
         if [ -d "${MESA_PATH}/lib" ]; then
             LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${MESA_PATH}/lib"
-            MESA_COUNT=$((MESA_COUNT + 1))
         fi
     done
+    
+    # Add Python library paths from Nix store to avoid vdso errors
+    PYTHON_LIB_PATH=$(find /nix/store -type d -path "*/python3.*/lib" 2>/dev/null | head -1)
+    if [ -n "$PYTHON_LIB_PATH" ]; then
+        LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${PYTHON_LIB_PATH}"
+    fi
     
     # Add common system library paths as fallback
     LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/lib/x86_64-linux-gnu:/lib/x86_64-linux-gnu:/usr/lib"
     
     export LD_LIBRARY_PATH
+    
+    # Set environment variables to prevent vdso_gettimeofday errors
+    # The error occurs when Python tries to use incompatible vdso from system
+    # Solution: Clear LD_PRELOAD and ensure proper library paths
+    unset LD_PRELOAD
+    
+    # Add Nix Python library paths to ensure proper library resolution
+    NIX_PYTHON_LIB=$(find /nix/store -type d \( -path "*/python3.*/lib" -o -path "*/python-3.*/lib" \) 2>/dev/null | head -1)
+    if [ -n "$NIX_PYTHON_LIB" ]; then
+        LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${NIX_PYTHON_LIB}"
+    fi
+    
+    # Add virtualenv Python library path
+    if [ -d "$APP_DIR/.venv/lib" ]; then
+        VENV_LIB_DIR=$(find "$APP_DIR/.venv/lib" -type d -name "python3.*" 2>/dev/null | head -1)
+        if [ -n "$VENV_LIB_DIR" ]; then
+            LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${VENV_LIB_DIR}"
+        fi
+    fi
     
     if [ -z "$LIBGL_PATH" ]; then
         echo "⚠️  Warning: libGL.so.1 not found in Nix store, using system paths"
