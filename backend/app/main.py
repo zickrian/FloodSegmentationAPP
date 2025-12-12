@@ -67,18 +67,28 @@ async def startup_event():
     
     try:
         # Get model paths from environment variables or use defaults
-        # For Railway: set MODEL_PATH_UNET and MODEL_PATH_UNETPP environment variables
-        # pointing to model files in Railway Storage or absolute paths
-        
-        # Try environment variables first (for Railway deployment)
+        # Environment variables can override for custom setups
         model_path_unet = os.getenv("MODEL_PATH_UNET")
         model_path_unetpp = os.getenv("MODEL_PATH_UNETPP")
         
-        # Fallback to local paths (for local development)
-        # Read from Models folder at project root
+        # Default paths for Render deployment (models copied to /Models in Dockerfile)
+        # Also works for local development with relative path fallback
         if not model_path_unet or not model_path_unetpp:
-            # Get absolute path to Models folder (2 levels up from backend/app/)
-            base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "Models"))
+            # Priority 1: Check /Models (Docker container path from Dockerfile)
+            docker_models_path = "/Models"
+            
+            # Priority 2: Check relative path from backend/app/ (local development)
+            local_models_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "Models"))
+            
+            # Determine which path to use
+            if os.path.isdir(docker_models_path):
+                base_path = docker_models_path
+                logger.info(f"Using Docker container models path: {base_path}")
+            elif os.path.isdir(local_models_path):
+                base_path = local_models_path
+                logger.info(f"Using local development models path: {base_path}")
+            else:
+                raise FileNotFoundError(f"Models directory not found at {docker_models_path} or {local_models_path}")
             
             if not model_path_unet:
                 model_path_unet = os.path.join(base_path, "unet_baseline_best.pth")

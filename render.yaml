@@ -1,0 +1,15 @@
+services:
+  # Backend Service (FastAPI with UNet/UNet++ models)
+  - type: web
+    name: flood-segmentation-backend
+    runtime: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+    autoDeploy: true

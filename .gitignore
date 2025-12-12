@@ -40,14 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Model files - Stored in Railway Bucket, not in repo
-# Models will be downloaded from Railway Bucket at runtime
-Models/*
-!Models/.gitkeep
-**/*.pth
-**/*.pt
-backend/models_weights/
-models_weights/
+# Backup model files (keep actual models for deployment)
 *.pth.bak
 *.pt.bak
 

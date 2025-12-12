@@ -4,7 +4,7 @@ Advanced flood area detection using deep learning (UNet & UNet++) with a modern 
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Python](https://img.shields.io/badge/python-3.10+-blue.svg)
+![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![Next.js](https://img.shields.io/badge/next.js-15.1-black.svg)
 
 ## 🎯 Features
@@ -15,18 +15,7 @@ Advanced flood area detection using deep learning (UNet & UNet++) with a modern 
 - **Comprehensive Metrics:** Flood area percentage, pixel counts, and model agreement
 - **Visual Overlays:** Color-coded segmentation masks
 - **Disagreement Analysis:** See where models differ
-- **Production Ready:** Deployed to Railway with Nixpacks (no Docker required)
-
-## 📸 Screenshots
-
-### Upload Interface
-![Upload Interface](docs/screenshots/upload.png)
-
-### Results View
-![Results View](docs/screenshots/results.png)
-
-### Mobile View
-![Mobile View](docs/screenshots/mobile.png)
+- **Production Ready:** Deployed to Render with Docker
 
 ## 🏗️ Architecture
 
@@ -45,9 +34,9 @@ Advanced flood area detection using deep learning (UNet & UNet++) with a modern 
 
 **Backend:**
 - FastAPI
-- PyTorch 2.1
+- PyTorch 2.1 (CPU)
 - Segmentation Models PyTorch
-- Pillow, NumPy, OpenCV
+- Pillow, NumPy, OpenCV-Headless
 
 **Models:**
 - UNet (ResNet34 encoder)
@@ -59,11 +48,10 @@ Advanced flood area detection using deep learning (UNet & UNet++) with a modern 
 
 ### Prerequisites
 
-- Python 3.10+
+- Python 3.11+
 - Node.js 18+
-- Model weight files (see [Setup](#setup))
 
-### Setup
+### Local Development Setup
 
 1. **Clone repository:**
 
@@ -84,13 +72,8 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Copy model weights
-mkdir models_weights
-cp ../Models/unet_baseline_best.pth models_weights/
-cp ../Models/unetplus.pth models_weights/
-
-# Run backend
-uvicorn app.main:app --reload
+# Run backend (models will be loaded from ../Models/)
+uvicorn app.main:app --reload --port 8000
 ```
 
 Backend will run on `http://localhost:8000`
@@ -140,73 +123,51 @@ flood-segmentation/
 │   │   ├── preprocessing.py # Image preprocessing
 │   │   ├── postprocessing.py# Analysis generation
 │   │   └── utils.py         # Helpers
-│   ├── models_weights/      # Model checkpoints
+│   ├── Dockerfile           # Docker configuration for Render
 │   └── requirements.txt     # Python dependencies
-├── Models/                  # Training artifacts
-│   ├── eksperimen_PCD_unet_dan_unet++.ipynb
+├── Models/                  # Pre-trained model weights
 │   ├── unet_baseline_best.pth
 │   └── unetplus.pth
-├── nixpacks.toml            # Railway build config
-├── railway.toml             # Railway deployment config
-├── start.sh                 # Startup script
-├── Procfile                 # Alternative deployment
-├── ARCHITECTURE.md          # System architecture
-├── RAILWAY_DEPLOYMENT.md    # Railway deployment guide
-├── TESTING.md               # Testing procedures
+├── render.yaml              # Render deployment configuration
 └── README.md               # This file
 ```
 
-## 🧪 Testing
+## 🚀 Deployment on Render
 
-### Backend Tests
+This application is configured for easy deployment to [Render](https://render.com) using Docker.
 
-```bash
-cd backend
-pytest tests/ -v
-```
+### Method 1: Blueprint (Recommended)
 
-### Frontend Tests
+1. Fork/clone this repository to your GitHub account
+2. Go to [Render Dashboard](https://dashboard.render.com)
+3. Click **New +** → **Blueprint**
+4. Connect your GitHub repository
+5. Render will auto-detect `render.yaml` and configure everything
+6. Click **Apply** to deploy
 
-```bash
-npm test
-```
+### Method 2: Manual Web Service
 
-### End-to-End Test
+1. Go to [Render Dashboard](https://dashboard.render.com)
+2. Click **New +** → **Web Service**
+3. Connect your GitHub repository
+4. Configure:
+   - **Runtime:** Docker
+   - **Docker Build Context:** `.` (root)
+   - **Dockerfile Path:** `backend/Dockerfile`
+5. Add environment variables:
+   - `CORS_ORIGINS`: `*` (or your frontend URL)
+   - `PYTHONUNBUFFERED`: `1`
+6. Click **Deploy**
 
-```bash
-python test_e2e.py
-```
+### Environment Variables
 
-See [TESTING.md](TESTING.md) for comprehensive testing guide.
-
-## 🚀 Deployment
-
-### Railway (Recommended)
-
-This application is designed for Railway deployment using Nixpacks (no Docker required).
-
-1. **Connect Repository:**
-   - Create new project on Railway
-   - Connect GitHub repository
-   - Railway will auto-detect `nixpacks.toml` configuration
-
-2. **Configure Environment Variables:**
-   - Set `PYTHONUNBUFFERED=1`
-   - Set `OPENCV_HEADLESS=1`
-   - Set `NEXT_PUBLIC_API_URL=` (empty for internal routing)
-   - Add model paths if using Railway Storage
-
-3. **Deploy:**
-   - Railway will automatically build and deploy
-   - Both frontend and backend run in same container
-
-See [RAILWAY_DEPLOYMENT.md](RAILWAY_DEPLOYMENT.md) for complete deployment guide.
-
-### Alternative: Manual Deployment
-
-For other platforms, you can use the included scripts:
-- `start.sh` - Starts both backend and frontend
-- `Procfile` - Alternative deployment configuration
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PORT` | Server port (auto-set by Render) | 8000 |
+| `CORS_ORIGINS` | Allowed CORS origins | `*` |
+| `PYTHONUNBUFFERED` | Python output buffering | `1` |
+| `MODEL_PATH_UNET` | Custom UNet model path | `/Models/unet_baseline_best.pth` |
+| `MODEL_PATH_UNETPP` | Custom UNet++ model path | `/Models/unetplus.pth` |
 
 ## 📊 Model Performance
 
@@ -216,34 +177,6 @@ From training on flood segmentation dataset:
 |-------|----------|-----------|----------------|
 | UNet | 80.35% | 89.06% | 91.11% |
 | UNet++ | 81.48% | 89.77% | 91.58% |
-
-### Sample Results
-
-**Image 1: Urban Flooding**
-- UNet: 34.2% flooded
-- UNet++: 31.8% flooded
-- Agreement: 94.3%
-
-**Image 2: River Overflow**
-- UNet: 56.7% flooded
-- UNet++: 58.1% flooded
-- Agreement: 96.1%
-
-## 🎨 UI/UX Design
-
-### Design Principles
-- **Minimalistic:** Clean, focused interface
-- **Responsive:** Mobile-first design
-- **Accessible:** WCAG 2.1 AA compliant
-- **Fast:** Optimized for performance
-- **Intuitive:** Clear user flow
-
-### Color Palette
-- Primary: Blue (#3B82F6)
-- Secondary: Indigo (#6366F1)
-- Accent: Purple (#8B5CF6)
-- Success: Green (#10B981)
-- Warning: Red (#EF4444)
 
 ## 📝 API Documentation
 
@@ -295,23 +228,6 @@ Body:
 }
 ```
 
-## 🔧 Configuration
-
-### Environment Variables
-
-**Backend:**
-```env
-MODEL_PATH_UNET=./models_weights/unet_baseline_best.pth
-MODEL_PATH_UNETPP=./models_weights/unetplus.pth
-DEVICE=cpu
-CORS_ORIGINS=http://localhost:3000
-```
-
-**Frontend:**
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
-```
-
 ## 🤝 Contributing
 
 Contributions are welcome! Please follow these steps:
@@ -326,10 +242,6 @@ Contributions are welcome! Please follow these steps:
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 👥 Authors
-
-- Your Name - Initial work - [@yourusername](https://github.com/yourusername)
-
 ## 🙏 Acknowledgments
 
 - [Segmentation Models PyTorch](https://github.com/qubvel/segmentation_models.pytorch)
@@ -337,44 +249,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Next.js](https://nextjs.org/)
 - [Flood Dataset](https://www.kaggle.com/datasets/faizalkarim/flood-area-segmentation)
 
-## 📞 Support
-
-For support, email your.email@example.com or open an issue on GitHub.
-
-## 🔮 Future Enhancements
-
-- [ ] Add more segmentation models (DeepLabV3+, PSPNet)
-- [ ] Batch processing for multiple images
-- [ ] Historical analysis dashboard
-- [ ] Export results to PDF
-- [ ] Mobile app (React Native)
-- [ ] Real-time video segmentation
-- [ ] Integration with GIS systems
-- [ ] Multi-language support
-- [ ] API authentication
-- [ ] Advanced analytics and reporting
-
-## 📈 Roadmap
-
-### Version 1.1 (Q1 2024)
-- Batch processing
-- PDF export
-- Advanced analytics
-
-### Version 1.2 (Q2 2024)
-- Mobile app
-- Real-time video
-- GIS integration
-
-### Version 2.0 (Q3 2024)
-- Additional models
-- Enterprise features
-- API marketplace
-
 ---
 
 **Built with ❤️ using Next.js, FastAPI, and PyTorch**
-
-**Demo:** https://your-app.railway.app  
-**Documentation:** https://docs.your-app.com  
-**API:** https://api.your-app.railway.app
