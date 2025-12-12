@@ -2,7 +2,7 @@
 builder = "nixpacks"
 
 [deploy]
-# Using start.sh to run both services
+# Using start.sh to run only backend (backend-only deployment)
 startCommand = "chmod +x start.sh && ./start.sh"
 numReplicas = 1
 restartPolicyType = "on_failure"
@@ -12,14 +12,17 @@ restartPolicyMaxRetries = 3
 PYTHONUNBUFFERED = "1"
 PYTHONPATH = "/app"
 OPENCV_HEADLESS = "1"
-# API URL handled by Next.js rewrites - empty means use internal rewrite
-NEXT_PUBLIC_API_URL = ""
+# CORS Origins - Set this to your Vercel frontend URL(s) after deployment
+# Format: https://your-app.vercel.app,https://your-app.vercel.app/*
+# Use "*" temporarily for initial deployment
+CORS_ORIGINS = "*"
 # Railway Bucket Configuration
 # Set these in Railway Dashboard or override here
 RAILWAY_BUCKET_NAME = "neat-gyoza-bevw8k9fvmbjyz"
-# Optional: If using direct URLs instead of Railway CLI
+# Model URLs from Railway Bucket (Recommended - set these in Railway Dashboard)
+# Get URLs from Railway Bucket after uploading models
 # MODEL_URL_UNET = ""
 # MODEL_URL_UNETPP = ""
-# Optional: If using AWS CLI/S3 API
+# Or use AWS CLI method with access keys (set in Railway Dashboard)
 # RAILWAY_ACCESS_KEY_ID = ""
 # RAILWAY_SECRET_ACCESS_KEY = ""

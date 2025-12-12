@@ -12,30 +12,10 @@ const nextConfig: NextConfig = {
   // Enable compression
   compress: true,
   
-  // Rewrite requests to the local running FastAPI backend
-  async rewrites() {
-    return [
-      // API Routes
-      {
-        source: "/api/:path*",
-        destination: "http://127.0.0.1:8000/api/:path*",
-      },
-      // Health Check Endpoint
-      {
-        source: "/health",
-        destination: "http://127.0.0.1:8000/health",
-      },
-      // Documentation (Optional)
-      {
-        source: "/docs",
-        destination: "http://127.0.0.1:8000/docs",
-      },
-      {
-        source: "/openapi.json",
-        destination: "http://127.0.0.1:8000/openapi.json",
-      },
-    ];
-  },
+  // Note: Removed rewrites() because backend is now deployed separately
+  // Frontend will call backend directly via NEXT_PUBLIC_API_URL environment variable
+  // For local development, set NEXT_PUBLIC_API_URL=http://localhost:8000
+  // For production (Vercel), set NEXT_PUBLIC_API_URL=https://your-railway-backend.railway.app
 };
 
 export default nextConfig;
