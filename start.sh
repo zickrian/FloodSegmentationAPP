@@ -117,6 +117,8 @@ fi
 echo ""
 echo "Python: $PYTHON_BIN"
 $PYTHON_BIN --version
+echo "Installed packages:"
+$PYTHON_BIN -m pip list | grep -E "opencv|albumentations|numpy" || true
 
 # Start Backend
 cd "$APP_DIR/backend"

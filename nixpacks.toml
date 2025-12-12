@@ -2,15 +2,16 @@
 
 [phases.setup]
 # OpenCV dependencies: libGL for OpenGL, glib for libgthread
-nixPkgs = ["python311", "python311Packages.pip", "gcc", "curl", "awscli2", "libGL", "glib"]
+# Adding full system library support to prevent any "missing shared object" errors
+nixPkgs = ["python311", "python311Packages.pip", "gcc", "curl", "awscli2", "libGL", "glib", "xorg.libXext", "xorg.libXrender", "xorg.libSM"]
 
 [phases.install]
 cmds = [
     "python -m venv /app/.venv",
     "/app/.venv/bin/pip install --upgrade pip setuptools wheel",
-    "/app/.venv/bin/pip install --no-cache-dir -r backend/requirements.txt",
-    "/app/.venv/bin/pip uninstall -y opencv-python opencv-contrib-python 2>/dev/null || true",
+    # Install headless OpenCV FIRST to prevent Albumentations from pulling the standard one
     "/app/.venv/bin/pip install --no-cache-dir opencv-python-headless==4.9.0.80",
+    "/app/.venv/bin/pip install --no-cache-dir -r backend/requirements.txt",
     "rm -rf /root/.cache/pip /tmp/*"
 ]
 
