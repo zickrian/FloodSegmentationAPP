@@ -31,12 +31,41 @@ MODEL_URL_UNET=https://storage.railway.app/your-bucket-path/unet_baseline_best.p
 MODEL_URL_UNETPP=https://storage.railway.app/your-bucket-path/unetplus.pth
 ```
 
-**Cara mendapatkan URL:**
-1. Buka Railway Dashboard
-2. Masuk ke Storage/Bucket `neat-gyoza`
-3. Klik file `unet_baseline_best.pth` dan `unetplus.pth`
-4. Copy URL publik yang muncul
-5. Set sebagai `MODEL_URL_UNET` dan `MODEL_URL_UNETPP`
+**Cara mendapatkan URL dari Railway Bucket:**
+
+**Opsi A: Via Railway Dashboard (Paling Mudah)**
+1. Buka Railway Dashboard → Project `happy-alignment`
+2. Klik tab **Storage** atau cari bucket `neat-gyoza`
+3. Klik bucket `neat-gyoza` untuk membuka
+4. Klik file `unet_baseline_best.pth` → Copy URL yang muncul
+5. Klik file `unetplus.pth` → Copy URL yang muncul
+6. Set di Railway Environment Variables:
+   - `MODEL_URL_UNET` = URL dari step 4
+   - `MODEL_URL_UNETPP` = URL dari step 5
+
+**Opsi B: Via Railway CLI**
+```bash
+# Install Railway CLI
+npm i -g @railway/cli
+
+# Login
+railway login
+
+# List files in bucket
+railway storage list neat-gyoza
+
+# Get URL for specific file
+railway storage url neat-gyoza/unet_baseline_best.pth
+railway storage url neat-gyoza/unetplus.pth
+```
+
+**Format URL biasanya:**
+```
+https://storage.railway.app/neat-gyoza-bevw8k9fvmbjyz/unet_baseline_best.pth
+https://storage.railway.app/neat-gyoza-bevw8k9fvmbjyz/unetplus.pth
+```
+
+**PENTING:** Pastikan URL bisa diakses publik (tidak perlu authentication)
 
 #### Method 2: AWS CLI (Alternatif)
 

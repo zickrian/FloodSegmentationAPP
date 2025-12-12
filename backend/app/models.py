@@ -53,24 +53,30 @@ class ModelManager:
         logger.info("✓ UNet++ model loaded and ready")
     
     def _create_unet(self) -> nn.Module:
-        """Create UNet model architecture"""
+        """
+        Create UNet model architecture
+        MUST MATCH TRAINING: encoder_weights='imagenet' for consistency
+        """
         model = smp.Unet(
             encoder_name=self.encoder_name,
-            encoder_weights=None,  # We'll load trained weights
+            encoder_weights='imagenet',  # Match training: pretrained ImageNet weights (will be overwritten by load_state_dict)
             in_channels=self.in_channels,
             classes=self.classes,
-            activation=None  # We apply sigmoid separately
+            activation=None  # We apply sigmoid separately (matches training)
         )
         return model
     
     def _create_unetplusplus(self) -> nn.Module:
-        """Create UNet++ model architecture"""
+        """
+        Create UNet++ model architecture
+        MUST MATCH TRAINING: encoder_weights='imagenet' for consistency
+        """
         model = smp.UnetPlusPlus(
             encoder_name=self.encoder_name,
-            encoder_weights=None,  # We'll load trained weights
+            encoder_weights='imagenet',  # Match training: pretrained ImageNet weights (will be overwritten by load_state_dict)
             in_channels=self.in_channels,
             classes=self.classes,
-            activation=None  # We apply sigmoid separately
+            activation=None  # We apply sigmoid separately (matches training)
         )
         return model
     

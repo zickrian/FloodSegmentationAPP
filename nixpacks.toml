@@ -3,7 +3,7 @@
 
 [phases.setup]
 # Install Python only (no Node.js needed for backend only)
-nixPkgs = ["python311", "python311Packages.pip", "gcc"]
+nixPkgs = ["python311", "python311Packages.pip", "gcc", "curl"]
 # Required system libraries for OpenCV and other dependencies
 aptPkgs = ["libgl1", "libglx-mesa0", "libglib2.0-0"]
 
