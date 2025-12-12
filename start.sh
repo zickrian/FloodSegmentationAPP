@@ -29,8 +29,6 @@ echo "  - MODEL_URL_UNETPP: $([ -n "$MODEL_URL_UNETPP" ] && echo 'SET' || echo '
 echo "  - RAILWAY_ACCESS_KEY_ID: $([ -n "$RAILWAY_ACCESS_KEY_ID" ] && echo 'SET' || echo 'NOT SET')"
 echo "  - RAILWAY_SECRET_ACCESS_KEY: $([ -n "$RAILWAY_SECRET_ACCESS_KEY" ] && echo 'SET' || echo 'NOT SET')"
 echo "  - RAILWAY_BUCKET_NAME: $RAILWAY_BUCKET_NAME"
-echo "  - curl available: $(command -v curl >/dev/null 2>&1 && echo 'YES' || echo 'NO')"
-echo "  - aws CLI available: $(command -v aws >/dev/null 2>&1 && echo 'YES' || echo 'NO')"
 
 if [ -f "$MODEL_UNET" ] && [ -f "$MODEL_UNETPP" ]; then
     echo "✅ Model files found locally"
@@ -98,7 +96,6 @@ else
     
     if [ "$DOWNLOAD_SUCCESS" = false ] || [ ! -f "$MODEL_UNET" ] || [ ! -f "$MODEL_UNETPP" ]; then
         echo "❌ ERROR: Model files not found!"
-        echo "Set MODEL_URL_UNET and MODEL_URL_UNETPP, or RAILWAY_ACCESS_KEY_ID and RAILWAY_SECRET_ACCESS_KEY"
         exit 1
     fi
 fi
@@ -110,7 +107,17 @@ fi
 
 echo "✅ All model files verified"
 
-# Use virtualenv Python - DO NOT modify LD_LIBRARY_PATH to avoid vdso errors
+# Set minimal LD_LIBRARY_PATH for libGL only (avoid vdso error by not adding too many paths)
+if [ -d "/nix/store" ]; then
+    LIBGL_PATH=$(find /nix/store -name "libGL.so.1" -type f 2>/dev/null | head -1)
+    if [ -n "$LIBGL_PATH" ]; then
+        LIBGL_DIR=$(dirname "$LIBGL_PATH")
+        export LD_LIBRARY_PATH="$LIBGL_DIR"
+        echo "✅ Found libGL at: $LIBGL_DIR"
+    fi
+fi
+
+# Use virtualenv Python
 PYTHON_BIN="$APP_DIR/.venv/bin/python"
 if [ ! -x "$PYTHON_BIN" ]; then
     echo "❌ ERROR: Virtualenv Python not found at $PYTHON_BIN"
@@ -121,7 +128,6 @@ echo "Using Python: $PYTHON_BIN"
 $PYTHON_BIN --version
 
 # Start Backend
-echo ""
 cd "$APP_DIR/backend"
 
 if [ ! -f "app/main.py" ]; then
@@ -131,7 +137,6 @@ fi
 
 PORT=${PORT:-8000}
 
-# Set environment variables for OpenCV
 export OPENCV_HEADLESS=1
 export QT_QPA_PLATFORM=offscreen
 

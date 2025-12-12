@@ -1,23 +1,15 @@
 # Nixpacks configuration for Railway - BACKEND ONLY
-# This config is for deploying only the FastAPI backend (no Node.js/Next.js)
 
 [phases.setup]
-# Install Python only (no Node.js needed for backend only)
-nixPkgs = ["python311", "python311Packages.pip", "gcc", "curl", "awscli2"]
-# Required system libraries for OpenCV and other dependencies
-aptPkgs = ["libgl1", "libglib2.0-0"]
+# Use Nix packages for system libraries (apt doesn't work reliably in Nix)
+nixPkgs = ["python311", "python311Packages.pip", "gcc", "curl", "awscli2", "libGL", "glib"]
 
 [phases.install]
-# Install Python dependencies using virtualenv
 cmds = [
-    # Create virtualenv
     "python -m venv /app/.venv",
     "/app/.venv/bin/pip install --upgrade pip setuptools wheel",
-    # Uninstall any regular opencv-python if accidentally installed
     "/app/.venv/bin/pip uninstall -y opencv-python opencv-contrib-python 2>/dev/null || true",
-    # Install dependencies
     "/app/.venv/bin/pip install --no-cache-dir -r backend/requirements.txt",
-    # Cleanup
     "rm -rf /root/.cache/pip /tmp/*"
 ]
 
