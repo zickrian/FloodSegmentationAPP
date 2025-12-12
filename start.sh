@@ -12,14 +12,11 @@ fi
 
 echo "App directory: $APP_DIR"
 
-# Set LD_LIBRARY_PATH - symlinks created during build phase in /usr/lib
-export LD_LIBRARY_PATH="/usr/lib:${LD_LIBRARY_PATH:-}"
-echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
-
-# Verify symlinks exist
-echo ""
-echo "Checking library symlinks..."
-ls -la /usr/lib/libGL.so.1 /usr/lib/libglib-2.0.so.0 /usr/lib/libgthread-2.0.so.0 2>/dev/null || echo "Some symlinks may be missing"
+# Headless mode validation
+echo "Checking opencv-python-headless..."
+if $APP_DIR/.venv/bin/pip list | grep "opencv-python " > /dev/null; then
+    echo "WARNING: Standard opencv-python found! This might cause crashes."
+fi
 
 # Create Models directory
 MODEL_DIR="$APP_DIR/Models"
