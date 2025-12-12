@@ -9,9 +9,13 @@ nixPkgs = ["python311", "python311Packages.pip", "gcc", "curl", "awscli2", "libG
 cmds = [
     "python -m venv /app/.venv",
     "/app/.venv/bin/pip install --upgrade pip setuptools wheel",
-    # Install headless OpenCV FIRST to prevent Albumentations from pulling the standard one
-    "/app/.venv/bin/pip install --no-cache-dir opencv-python-headless==4.9.0.80",
+    # Step 1: Install all requirements (Albumentations may pull opencv-python)
     "/app/.venv/bin/pip install --no-cache-dir -r backend/requirements.txt",
+    # Step 2: NUCLEAR - Remove ALL opencv packages completely
+    "/app/.venv/bin/pip uninstall -y opencv-python opencv-python-headless opencv-contrib-python opencv-contrib-python-headless 2>/dev/null || true",
+    # Step 3: Reinstall ONLY the headless version (clean slate)
+    "/app/.venv/bin/pip install --no-cache-dir opencv-python-headless==4.9.0.80",
+    # Cleanup
     "rm -rf /root/.cache/pip /tmp/*"
 ]
 

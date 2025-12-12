@@ -12,11 +12,16 @@ fi
 
 echo "App directory: $APP_DIR"
 
-# Headless mode validation
-echo "Checking opencv-python-headless..."
-if $APP_DIR/.venv/bin/pip list | grep "opencv-python " > /dev/null; then
-    echo "WARNING: Standard opencv-python found! This might cause crashes."
+# Runtime OpenCV validation and cleanup
+echo "Verifying OpenCV installation..."
+if $APP_DIR/.venv/bin/pip list 2>/dev/null | grep -E "^opencv-python " > /dev/null; then
+    echo "WARNING: Standard opencv-python detected! Performing runtime cleanup..."
+    $APP_DIR/.venv/bin/pip uninstall -y opencv-python opencv-contrib-python 2>/dev/null || true
+    $APP_DIR/.venv/bin/pip install --no-cache-dir opencv-python-headless==4.9.0.80
+    echo "Cleanup complete. Only opencv-python-headless should remain."
 fi
+echo "OpenCV packages:"
+$APP_DIR/.venv/bin/pip list 2>/dev/null | grep -E "opencv" || echo "  (none found - ERROR!)"
 
 # Create Models directory
 MODEL_DIR="$APP_DIR/Models"
