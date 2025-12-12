@@ -17,6 +17,13 @@ export interface ModelResult {
   flood_pixels: number;
   total_pixels: number;
   summary: string;
+  // Training performance metrics
+  training_metrics?: {
+    loss: number;
+    iou: number;
+    dice: number;
+    accuracy: number;
+  };
 }
 
 export interface ComparisonResult {
