@@ -256,9 +256,38 @@ PORT=${PORT:-8000}
 # Set environment variables to ensure OpenCV headless mode
 export OPENCV_HEADLESS=1
 export QT_QPA_PLATFORM=offscreen
-# Set LD_LIBRARY_PATH to find OpenGL libraries if needed (for Nix environment)
+
+# Set LD_LIBRARY_PATH to find OpenGL libraries (for Nix environment)
+# This is critical for opencv-python-headless to work even though it shouldn't need libGL
 if [ -d "/nix/store" ]; then
-    export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:$(find /nix/store -name libGL.so.1 2>/dev/null | head -1 | xargs dirname 2>/dev/null || echo '')"
+    # Initialize LD_LIBRARY_PATH if not set
+    LD_LIBRARY_PATH="${LD_LIBRARY_PATH:-}"
+    
+    # Find libGL.so.1 location in Nix store
+    LIBGL_PATH=$(find /nix/store -name "libGL.so.1" 2>/dev/null | head -1)
+    if [ -n "$LIBGL_PATH" ] && [ -f "$LIBGL_PATH" ]; then
+        LIBGL_DIR=$(dirname "$LIBGL_PATH")
+        LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${LIBGL_DIR}"
+        echo "✅ Found libGL.so.1 at: $LIBGL_PATH"
+    fi
+    
+    # Find mesa library directories and add their lib paths (first 3 found)
+    MESA_COUNT=0
+    for MESA_PATH in $(find /nix/store -type d -name "mesa-*" 2>/dev/null | head -3); do
+        if [ -d "${MESA_PATH}/lib" ]; then
+            LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${MESA_PATH}/lib"
+            MESA_COUNT=$((MESA_COUNT + 1))
+        fi
+    done
+    
+    # Add common system library paths as fallback
+    LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/lib/x86_64-linux-gnu:/lib/x86_64-linux-gnu:/usr/lib"
+    
+    export LD_LIBRARY_PATH
+    
+    if [ -z "$LIBGL_PATH" ]; then
+        echo "⚠️  Warning: libGL.so.1 not found in Nix store, using system paths"
+    fi
 fi
 
 echo "Backend will run on port $PORT"
