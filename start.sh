@@ -12,40 +12,14 @@ fi
 
 echo "App directory: $APP_DIR"
 
-# Set LD_LIBRARY_PATH for OpenGL libraries FIRST (before any Python imports)
+# Set LD_LIBRARY_PATH - symlinks created during build phase in /usr/lib
+export LD_LIBRARY_PATH="/usr/lib:${LD_LIBRARY_PATH:-}"
+echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+
+# Verify symlinks exist
 echo ""
-echo "Setting up OpenGL libraries..."
-if [ -d "/nix/store" ]; then
-    GL_PATHS=""
-    
-    # Find mesa and libglvnd lib directories
-    for dir in $(find /nix/store -maxdepth 3 -type d -name "lib" 2>/dev/null | head -20); do
-        # Check if this lib dir contains OpenGL libraries
-        if ls "$dir"/libGL* 2>/dev/null | head -1 > /dev/null; then
-            GL_PATHS="${GL_PATHS:+$GL_PATHS:}$dir"
-            echo "  Found GL libs in: $dir"
-        fi
-    done
-    
-    # Also search for libGL.so.1 directly
-    LIBGL=$(find /nix/store -name "libGL.so.1" 2>/dev/null | head -1)
-    if [ -n "$LIBGL" ]; then
-        LIBGL_DIR=$(dirname "$LIBGL")
-        if [ -z "$GL_PATHS" ] || [[ "$GL_PATHS" != *"$LIBGL_DIR"* ]]; then
-            GL_PATHS="${GL_PATHS:+$GL_PATHS:}$LIBGL_DIR"
-            echo "  Found libGL.so.1 at: $LIBGL_DIR"
-        fi
-    fi
-    
-    if [ -n "$GL_PATHS" ]; then
-        export LD_LIBRARY_PATH="$GL_PATHS"
-        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-    else
-        echo "Warning: No OpenGL libraries found in /nix/store"
-    fi
-else
-    echo "Not running in Nix environment"
-fi
+echo "Checking library symlinks..."
+ls -la /usr/lib/libGL.so.1 /usr/lib/libglib-2.0.so.0 /usr/lib/libgthread-2.0.so.0 2>/dev/null || echo "Some symlinks may be missing"
 
 # Create Models directory
 MODEL_DIR="$APP_DIR/Models"

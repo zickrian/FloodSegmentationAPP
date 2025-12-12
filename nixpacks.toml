@@ -1,9 +1,8 @@
 # Nixpacks configuration for Railway - BACKEND ONLY
 
 [phases.setup]
-# Use correct Nix packages for OpenGL support
-# mesa and libglvnd provide libGL.so.1 needed by opencv-python-headless
-nixPkgs = ["python311", "python311Packages.pip", "gcc", "curl", "awscli2", "mesa", "libglvnd"]
+# OpenCV dependencies: libGL for OpenGL, glib for libgthread
+nixPkgs = ["python311", "python311Packages.pip", "gcc", "curl", "awscli2", "libGL", "glib"]
 
 [phases.install]
 cmds = [
@@ -15,7 +14,14 @@ cmds = [
 ]
 
 [phases.build]
-cmds = []
+# Create symbolic links for OpenCV shared libraries (Railway Station documented approach)
+cmds = [
+    "mkdir -p /usr/lib",
+    "GL=$(find /nix/store -name 'libGL.so.1' -type f 2>/dev/null | head -1) && [ -n \"$GL\" ] && ln -sf $GL /usr/lib/libGL.so.1 || true",
+    "GLIB=$(find /nix/store -name 'libglib-2.0.so.0' -type f 2>/dev/null | head -1) && [ -n \"$GLIB\" ] && ln -sf $GLIB /usr/lib/libglib-2.0.so.0 || true",
+    "GTHREAD=$(find /nix/store -name 'libgthread-2.0.so.0' -type f 2>/dev/null | head -1) && [ -n \"$GTHREAD\" ] && ln -sf $GTHREAD /usr/lib/libgthread-2.0.so.0 || true",
+    "ls -la /usr/lib/ || true"
+]
 
 [start]
 cmd = "chmod +x start.sh && ./start.sh"
