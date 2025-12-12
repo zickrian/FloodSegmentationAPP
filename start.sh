@@ -253,5 +253,13 @@ fi
 # Use PORT from Railway or default to 8000
 PORT=${PORT:-8000}
 
+# Set environment variables to ensure OpenCV headless mode
+export OPENCV_HEADLESS=1
+export QT_QPA_PLATFORM=offscreen
+# Set LD_LIBRARY_PATH to find OpenGL libraries if needed (for Nix environment)
+if [ -d "/nix/store" ]; then
+    export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:$(find /nix/store -name libGL.so.1 2>/dev/null | head -1 | xargs dirname 2>/dev/null || echo '')"
+fi
+
 echo "Backend will run on port $PORT"
 "$PYTHON_BIN" -m uvicorn app.main:app --host 0.0.0.0 --port "$PORT"

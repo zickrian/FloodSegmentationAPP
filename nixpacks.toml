@@ -3,9 +3,10 @@
 
 [phases.setup]
 # Install Python only (no Node.js needed for backend only)
-nixPkgs = ["python311", "python311Packages.pip", "gcc", "curl", "awscli2"]
+# Adding mesa and libGL for OpenCV headless support (even though headless shouldn't need it)
+nixPkgs = ["python311", "python311Packages.pip", "gcc", "curl", "awscli2", "mesa"]
 # Required system libraries for OpenCV and other dependencies
-aptPkgs = ["libgl1", "libglx-mesa0", "libglib2.0-0"]
+aptPkgs = ["libgl1", "libglx-mesa0", "libglib2.0-0", "libgl1-mesa-glx", "libgl1-mesa-dri"]
 
 [phases.install]
 # Install Python dependencies only
@@ -13,6 +14,8 @@ cmds = [
     # Use a dedicated virtualenv to avoid immutable Nix system python
     "python -m venv /app/.venv",
     "/app/.venv/bin/pip install --upgrade pip setuptools wheel",
+    # Uninstall any regular opencv-python if accidentally installed, ensure headless version
+    "/app/.venv/bin/pip uninstall -y opencv-python opencv-contrib-python || true",
     # Install with no-cache-dir to reduce image size
     "/app/.venv/bin/pip install --no-cache-dir -r backend/requirements.txt",
     # Aggressive cleanup after pip install
