@@ -10,15 +10,16 @@ const COLORS = {
 
 // Default training metrics from model validation (from README)
 // These are used if the API doesn't provide training_metrics
+// Loss values are approximated based on model IoU/Dice performance
 const DEFAULT_TRAINING_METRICS = {
     unet: {
-        loss: 0.1842, // Estimated based on model performance
+        loss: 0.1842,
         iou: 80.35,
         dice: 89.06,
         accuracy: 91.11
     },
     unetpp: {
-        loss: 0.1756, // Estimated based on model performance
+        loss: 0.1756,
         iou: 81.48,
         dice: 89.77,
         accuracy: 91.58

@@ -183,37 +183,37 @@ export default function AnalysisPanel({ unet, unetpp, comparison }: AnalysisPane
               <tr>
                 <td className="text-left w-[40%] font-medium text-gray-900">Loss</td>
                 <td className="text-center w-[30%] text-gray-700">
-                  {unet.training_metrics?.loss?.toFixed(4) ?? 'N/A'}
+                  {unet.training_metrics?.loss != null ? unet.training_metrics.loss.toFixed(4) : 'N/A'}
                 </td>
                 <td className="text-center w-[30%] text-gray-700">
-                  {unetpp.training_metrics?.loss?.toFixed(4) ?? 'N/A'}
+                  {unetpp.training_metrics?.loss != null ? unetpp.training_metrics.loss.toFixed(4) : 'N/A'}
                 </td>
               </tr>
               <tr>
                 <td className="text-left w-[40%] font-medium text-gray-900">IoU Score</td>
                 <td className="text-center w-[30%] font-semibold text-red-600">
-                  {unet.training_metrics?.iou ? formatPercent(unet.training_metrics.iou) : 'N/A'}
+                  {unet.training_metrics?.iou != null ? formatPercent(unet.training_metrics.iou) : 'N/A'}
                 </td>
                 <td className="text-center w-[30%] font-semibold text-blue-600">
-                  {unetpp.training_metrics?.iou ? formatPercent(unetpp.training_metrics.iou) : 'N/A'}
+                  {unetpp.training_metrics?.iou != null ? formatPercent(unetpp.training_metrics.iou) : 'N/A'}
                 </td>
               </tr>
               <tr>
                 <td className="text-left w-[40%] font-medium text-gray-900">Dice Score</td>
                 <td className="text-center w-[30%] font-semibold text-red-600">
-                  {unet.training_metrics?.dice ? formatPercent(unet.training_metrics.dice) : 'N/A'}
+                  {unet.training_metrics?.dice != null ? formatPercent(unet.training_metrics.dice) : 'N/A'}
                 </td>
                 <td className="text-center w-[30%] font-semibold text-blue-600">
-                  {unetpp.training_metrics?.dice ? formatPercent(unetpp.training_metrics.dice) : 'N/A'}
+                  {unetpp.training_metrics?.dice != null ? formatPercent(unetpp.training_metrics.dice) : 'N/A'}
                 </td>
               </tr>
               <tr>
                 <td className="text-left w-[40%] font-medium text-gray-900">Pixel Accuracy</td>
                 <td className="text-center w-[30%] font-semibold text-red-600">
-                  {unet.training_metrics?.accuracy ? formatPercent(unet.training_metrics.accuracy) : 'N/A'}
+                  {unet.training_metrics?.accuracy != null ? formatPercent(unet.training_metrics.accuracy) : 'N/A'}
                 </td>
                 <td className="text-center w-[30%] font-semibold text-blue-600">
-                  {unetpp.training_metrics?.accuracy ? formatPercent(unetpp.training_metrics.accuracy) : 'N/A'}
+                  {unetpp.training_metrics?.accuracy != null ? formatPercent(unetpp.training_metrics.accuracy) : 'N/A'}
                 </td>
               </tr>
             </tbody>
