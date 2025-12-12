@@ -44,6 +44,10 @@ class ModelManager:
         self.model_unet.eval()
         logger.info("✓ UNet model loaded and ready")
         
+        # Free memory before loading next model
+        import gc
+        gc.collect()
+        
         # Load UNet++
         logger.info("Loading UNet++ model...")
         self.model_unetpp = self._create_unetplusplus()
@@ -89,24 +93,31 @@ class ModelManager:
             weight_path: Path to .pth file
             model_name: Name for logging
         """
+        import gc
+        
         try:
-            # Load weights
+            # Load weights (removed weights_only=True for compatibility with various checkpoint formats)
+            logger.info(f"Loading {model_name} weights from {weight_path}...")
             state_dict = torch.load(
                 weight_path,
-                map_location=self.device,
-                weights_only=True  # Security best practice
+                map_location=self.device
             )
             
             # Load state dict into model
             model.load_state_dict(state_dict)
             
-            logger.info(f"✓ {model_name} weights loaded from {weight_path}")
+            # Free memory after loading
+            del state_dict
+            gc.collect()
+            
+            logger.info(f"✓ {model_name} weights loaded successfully")
             
         except FileNotFoundError:
             raise FileNotFoundError(
                 f"{model_name} weights not found at {weight_path}"
             )
         except Exception as e:
+            logger.error(f"Error loading {model_name}: {str(e)}")
             raise RuntimeError(
                 f"Failed to load {model_name} weights: {str(e)}"
             )
