@@ -12,6 +12,41 @@ fi
 
 echo "App directory: $APP_DIR"
 
+# Set LD_LIBRARY_PATH for OpenGL libraries FIRST (before any Python imports)
+echo ""
+echo "Setting up OpenGL libraries..."
+if [ -d "/nix/store" ]; then
+    GL_PATHS=""
+    
+    # Find mesa and libglvnd lib directories
+    for dir in $(find /nix/store -maxdepth 3 -type d -name "lib" 2>/dev/null | head -20); do
+        # Check if this lib dir contains OpenGL libraries
+        if ls "$dir"/libGL* 2>/dev/null | head -1 > /dev/null; then
+            GL_PATHS="${GL_PATHS:+$GL_PATHS:}$dir"
+            echo "  Found GL libs in: $dir"
+        fi
+    done
+    
+    # Also search for libGL.so.1 directly
+    LIBGL=$(find /nix/store -name "libGL.so.1" 2>/dev/null | head -1)
+    if [ -n "$LIBGL" ]; then
+        LIBGL_DIR=$(dirname "$LIBGL")
+        if [ -z "$GL_PATHS" ] || [[ "$GL_PATHS" != *"$LIBGL_DIR"* ]]; then
+            GL_PATHS="${GL_PATHS:+$GL_PATHS:}$LIBGL_DIR"
+            echo "  Found libGL.so.1 at: $LIBGL_DIR"
+        fi
+    fi
+    
+    if [ -n "$GL_PATHS" ]; then
+        export LD_LIBRARY_PATH="$GL_PATHS"
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+    else
+        echo "Warning: No OpenGL libraries found in /nix/store"
+    fi
+else
+    echo "Not running in Nix environment"
+fi
+
 # Create Models directory
 MODEL_DIR="$APP_DIR/Models"
 mkdir -p "$MODEL_DIR"
@@ -23,41 +58,37 @@ MODEL_UNET="$MODEL_DIR/unet_baseline_best.pth"
 MODEL_UNETPP="$MODEL_DIR/unetplus.pth"
 RAILWAY_BUCKET_NAME="${RAILWAY_BUCKET_NAME:-neat-gyoza-bevw8k9fvmbjyz}"
 
-echo "Environment variables check:"
-echo "  - MODEL_URL_UNET: $([ -n "$MODEL_URL_UNET" ] && echo 'SET' || echo 'NOT SET')"
-echo "  - MODEL_URL_UNETPP: $([ -n "$MODEL_URL_UNETPP" ] && echo 'SET' || echo 'NOT SET')"
+echo "Environment variables:"
 echo "  - RAILWAY_ACCESS_KEY_ID: $([ -n "$RAILWAY_ACCESS_KEY_ID" ] && echo 'SET' || echo 'NOT SET')"
 echo "  - RAILWAY_SECRET_ACCESS_KEY: $([ -n "$RAILWAY_SECRET_ACCESS_KEY" ] && echo 'SET' || echo 'NOT SET')"
 echo "  - RAILWAY_BUCKET_NAME: $RAILWAY_BUCKET_NAME"
 
 if [ -f "$MODEL_UNET" ] && [ -f "$MODEL_UNETPP" ]; then
-    echo "✅ Model files found locally"
-    echo "  - UNet: $MODEL_UNET ($(du -h "$MODEL_UNET" 2>/dev/null | cut -f1 || echo 'N/A'))"
-    echo "  - UNet++: $MODEL_UNETPP ($(du -h "$MODEL_UNETPP" 2>/dev/null | cut -f1 || echo 'N/A'))"
+    echo "Model files found locally"
+    echo "  - UNet: $(du -h "$MODEL_UNET" 2>/dev/null | cut -f1 || echo 'exists')"
+    echo "  - UNet++: $(du -h "$MODEL_UNETPP" 2>/dev/null | cut -f1 || echo 'exists')"
 else
-    echo "⚠️  Model files not found locally, downloading..."
+    echo "Model files not found, downloading..."
     
     DOWNLOAD_SUCCESS=false
     
     # Method 1: Direct URLs
     if [ -n "$MODEL_URL_UNET" ] && [ -n "$MODEL_URL_UNETPP" ]; then
         if command -v curl >/dev/null 2>&1; then
-            echo "Using Direct URLs with curl..."
+            echo "Using Direct URLs..."
             DOWNLOAD_SUCCESS=true
             
             if [ ! -f "$MODEL_UNET" ]; then
-                echo "Downloading UNet model..."
                 if curl -fsSL --max-time 1800 --retry 3 "$MODEL_URL_UNET" -o "$MODEL_UNET"; then
-                    echo "✅ UNet model downloaded"
+                    echo "UNet model downloaded"
                 else
                     DOWNLOAD_SUCCESS=false
                 fi
             fi
             
             if [ ! -f "$MODEL_UNETPP" ]; then
-                echo "Downloading UNet++ model..."
                 if curl -fsSL --max-time 1800 --retry 3 "$MODEL_URL_UNETPP" -o "$MODEL_UNETPP"; then
-                    echo "✅ UNet++ model downloaded"
+                    echo "UNet++ model downloaded"
                 else
                     DOWNLOAD_SUCCESS=false
                 fi
@@ -75,18 +106,16 @@ else
             DOWNLOAD_SUCCESS=true
             
             if [ ! -f "$MODEL_UNET" ]; then
-                echo "Downloading UNet model via AWS CLI..."
                 if aws s3 cp "s3://$RAILWAY_BUCKET_NAME/unet_baseline_best.pth" "$MODEL_UNET" --endpoint-url="$AWS_ENDPOINT_URL" 2>&1; then
-                    echo "✅ UNet model downloaded"
+                    echo "UNet model downloaded"
                 else
                     DOWNLOAD_SUCCESS=false
                 fi
             fi
             
             if [ ! -f "$MODEL_UNETPP" ]; then
-                echo "Downloading UNet++ model via AWS CLI..."
                 if aws s3 cp "s3://$RAILWAY_BUCKET_NAME/unetplus.pth" "$MODEL_UNETPP" --endpoint-url="$AWS_ENDPOINT_URL" 2>&1; then
-                    echo "✅ UNet++ model downloaded"
+                    echo "UNet++ model downloaded"
                 else
                     DOWNLOAD_SUCCESS=false
                 fi
@@ -95,43 +124,34 @@ else
     fi
     
     if [ "$DOWNLOAD_SUCCESS" = false ] || [ ! -f "$MODEL_UNET" ] || [ ! -f "$MODEL_UNETPP" ]; then
-        echo "❌ ERROR: Model files not found!"
+        echo "ERROR: Model files not found!"
         exit 1
     fi
 fi
 
 if [ ! -f "$MODEL_UNET" ] || [ ! -f "$MODEL_UNETPP" ]; then
-    echo "❌ ERROR: Model files not available!"
+    echo "ERROR: Model files not available!"
     exit 1
 fi
 
-echo "✅ All model files verified"
-
-# Set minimal LD_LIBRARY_PATH for libGL only (avoid vdso error by not adding too many paths)
-if [ -d "/nix/store" ]; then
-    LIBGL_PATH=$(find /nix/store -name "libGL.so.1" -type f 2>/dev/null | head -1)
-    if [ -n "$LIBGL_PATH" ]; then
-        LIBGL_DIR=$(dirname "$LIBGL_PATH")
-        export LD_LIBRARY_PATH="$LIBGL_DIR"
-        echo "✅ Found libGL at: $LIBGL_DIR"
-    fi
-fi
+echo "All model files verified"
 
 # Use virtualenv Python
 PYTHON_BIN="$APP_DIR/.venv/bin/python"
 if [ ! -x "$PYTHON_BIN" ]; then
-    echo "❌ ERROR: Virtualenv Python not found at $PYTHON_BIN"
+    echo "ERROR: Python not found at $PYTHON_BIN"
     exit 1
 fi
 
-echo "Using Python: $PYTHON_BIN"
+echo ""
+echo "Python: $PYTHON_BIN"
 $PYTHON_BIN --version
 
 # Start Backend
 cd "$APP_DIR/backend"
 
 if [ ! -f "app/main.py" ]; then
-    echo "Error: Backend main.py not found!"
+    echo "ERROR: main.py not found!"
     exit 1
 fi
 
@@ -140,5 +160,6 @@ PORT=${PORT:-8000}
 export OPENCV_HEADLESS=1
 export QT_QPA_PLATFORM=offscreen
 
-echo "Starting FastAPI Backend on port $PORT..."
+echo ""
+echo "Starting FastAPI on port $PORT..."
 exec $PYTHON_BIN -m uvicorn app.main:app --host 0.0.0.0 --port "$PORT"
