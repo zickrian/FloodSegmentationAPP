@@ -10,6 +10,7 @@ cmds = [
     "/app/.venv/bin/pip install --upgrade pip setuptools wheel",
     "/app/.venv/bin/pip install --no-cache-dir -r backend/requirements.txt",
     "/app/.venv/bin/pip uninstall -y opencv-python opencv-contrib-python 2>/dev/null || true",
+    "/app/.venv/bin/pip install --no-cache-dir opencv-python-headless==4.9.0.80",
     "rm -rf /root/.cache/pip /tmp/*"
 ]
 
