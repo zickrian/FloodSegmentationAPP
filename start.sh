@@ -120,6 +120,83 @@ else
         fi
     fi
     
+    # Method 3: Python boto3 (if Method 1 and 2 failed)
+    if [ "$DOWNLOAD_SUCCESS" = false ] && [ -n "$RAILWAY_ACCESS_KEY_ID" ] && [ -n "$RAILWAY_SECRET_ACCESS_KEY" ]; then
+        PYTHON_BIN="$APP_DIR/.venv/bin/python"
+        if [ ! -x "$PYTHON_BIN" ]; then
+            PYTHON_BIN="$(command -v python)"
+        fi
+        
+        if [ -x "$PYTHON_BIN" ] && "$PYTHON_BIN" -c "import boto3" 2>/dev/null; then
+            echo "Using Method 3: Python boto3..."
+            DOWNLOAD_SUCCESS=true
+            
+            if [ ! -f "$MODEL_UNET" ]; then
+                echo "Downloading UNet model via boto3 from s3://$RAILWAY_BUCKET_NAME/unet_baseline_best.pth"
+                if "$PYTHON_BIN" -c "
+import boto3
+import os
+from botocore.config import Config
+
+s3 = boto3.client(
+    's3',
+    endpoint_url='https://storage.railway.app',
+    aws_access_key_id=os.environ['RAILWAY_ACCESS_KEY_ID'],
+    aws_secret_access_key=os.environ['RAILWAY_SECRET_ACCESS_KEY'],
+    config=Config(signature_version='s3v4')
+)
+
+s3.download_file(
+    '${RAILWAY_BUCKET_NAME}',
+    'unet_baseline_best.pth',
+    '${MODEL_UNET}'
+)
+print('✅ UNet model downloaded')
+" 2>&1; then
+                    echo "✅ UNet model downloaded ($(du -h "$MODEL_UNET" 2>/dev/null | cut -f1 || echo 'N/A'))"
+                else
+                    echo "❌ Failed to download UNet model via boto3"
+                    DOWNLOAD_SUCCESS=false
+                fi
+            else
+                echo "✅ UNet model already exists"
+            fi
+            
+            if [ ! -f "$MODEL_UNETPP" ]; then
+                echo "Downloading UNet++ model via boto3 from s3://$RAILWAY_BUCKET_NAME/unetplus.pth"
+                if "$PYTHON_BIN" -c "
+import boto3
+import os
+from botocore.config import Config
+
+s3 = boto3.client(
+    's3',
+    endpoint_url='https://storage.railway.app',
+    aws_access_key_id=os.environ['RAILWAY_ACCESS_KEY_ID'],
+    aws_secret_access_key=os.environ['RAILWAY_SECRET_ACCESS_KEY'],
+    config=Config(signature_version='s3v4')
+)
+
+s3.download_file(
+    '${RAILWAY_BUCKET_NAME}',
+    'unetplus.pth',
+    '${MODEL_UNETPP}'
+)
+print('✅ UNet++ model downloaded')
+" 2>&1; then
+                    echo "✅ UNet++ model downloaded ($(du -h "$MODEL_UNETPP" 2>/dev/null | cut -f1 || echo 'N/A'))"
+                else
+                    echo "❌ Failed to download UNet++ model via boto3"
+                    DOWNLOAD_SUCCESS=false
+                fi
+            else
+                echo "✅ UNet++ model already exists"
+            fi
+        else
+            echo "⚠️  Python boto3 not available, cannot use boto3 method"
+        fi
+    fi
+    
     # Final check
     if [ "$DOWNLOAD_SUCCESS" = false ] || [ ! -f "$MODEL_UNET" ] || [ ! -f "$MODEL_UNETPP" ]; then
         echo ""
@@ -129,6 +206,7 @@ else
         echo "   1. Direct URLs: Set MODEL_URL_UNET and MODEL_URL_UNETPP environment variables (Recommended)"
         echo "      Example: MODEL_URL_UNET=https://storage.railway.app/your-bucket/unet_baseline_best.pth"
         echo "   2. AWS CLI: Set RAILWAY_ACCESS_KEY_ID, RAILWAY_SECRET_ACCESS_KEY, and RAILWAY_BUCKET_NAME"
+        echo "   3. Python boto3: Set RAILWAY_ACCESS_KEY_ID, RAILWAY_SECRET_ACCESS_KEY, and RAILWAY_BUCKET_NAME"
         echo ""
         echo "   Current status:"
         echo "   - MODEL_URL_UNET: $([ -n "$MODEL_URL_UNET" ] && echo 'SET' || echo 'NOT SET')"
