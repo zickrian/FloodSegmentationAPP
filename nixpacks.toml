@@ -8,25 +8,23 @@ nixPkgs = ["python311", "python311Packages.pip", "gcc", "curl", "awscli2"]
 aptPkgs = ["libgl1", "libglib2.0-0"]
 
 [phases.install]
-# Install Python dependencies directly to user site-packages (no virtualenv)
-# This avoids vdso_gettimeofday errors that occur with virtualenv in Nix environment
+# Install Python dependencies using virtualenv
 cmds = [
-    # Upgrade pip
-    "pip install --upgrade pip setuptools wheel",
+    # Create virtualenv
+    "python -m venv /app/.venv",
+    "/app/.venv/bin/pip install --upgrade pip setuptools wheel",
     # Uninstall any regular opencv-python if accidentally installed
-    "pip uninstall -y opencv-python opencv-contrib-python 2>/dev/null || true",
-    # Install dependencies to user site-packages
-    "pip install --no-cache-dir -r backend/requirements.txt",
+    "/app/.venv/bin/pip uninstall -y opencv-python opencv-contrib-python 2>/dev/null || true",
+    # Install dependencies
+    "/app/.venv/bin/pip install --no-cache-dir -r backend/requirements.txt",
     # Cleanup
     "rm -rf /root/.cache/pip /tmp/*"
 ]
 
 [phases.build]
-# No build phase needed for backend only
 cmds = []
 
 [start]
-# Run backend using start script
 cmd = "chmod +x start.sh && ./start.sh"
 
 [variables]
